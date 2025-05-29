@@ -1,0 +1,1 @@
+from .gpt import get_tyre_info
