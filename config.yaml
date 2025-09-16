@@ -1,0 +1,45 @@
+# Tyre OCR System Configuration
+
+# YOLO Detection Settings
+yolo:
+  model_path: "models/Tyre_Detect.onnx"
+  confidence_threshold: 0.2
+  iou_threshold: 0.3
+
+# Image Processing Settings
+image:
+  input_folder: "sample_image"
+  output_folder: "doc/img"
+  supported_formats: [".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".webp"]
+  
+# ML Model Settings
+ml:
+  model_directory: "models"
+  tire_classifier:
+    similarity_threshold: 0.3
+    fuzzy_threshold: 0.6
+  size_extractor:
+    valid_widths: [135, 345]  # min, max
+    valid_aspect_ratios: [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90]
+    valid_rim_sizes: [13, 25]  # min, max
+  dot_extractor:
+    valid_weeks: [1, 52]  # min, max
+    valid_years: [0, 99]  # min, max
+
+# OCR Settings
+ocr:
+  provider: "google_cloud_vision"  # or "easyocr"
+  confidence_threshold: 0.5
+
+# Output Settings
+output:
+  format: "json"
+  save_images: true
+  save_ocr_text: true
+  save_results: true
+
+# Logging Settings
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  save_logs: true
+  log_file: "tyre_ocr.log"

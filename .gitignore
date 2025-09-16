@@ -144,7 +144,52 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# Model files
 *.onnx
+*.pth
+*.pkl
+*.h5
+*.hdf5
+*.pb
+*.tflite
+*.pt
+*.pth.tar
+
+# Large files and datasets
+*.tar.gz
+*.zip
+*.7z
+*.rar
+
+# Damage folder - ignore all images and data
+Damage/data/
+Damage/models/
+Damage/Tire\ Textures/
+Damage/*.jpg
+Damage/*.jpeg
+Damage/*.png
+Damage/*.gif
+Damage/*.bmp
+Damage/*.tiff
+Damage/*.heic
+Damage/*.webp
+
+# Models folder - ignore all model files
+models/
+*.onnx
+*.pth
+*.pkl
+*.h5
+*.hdf5
+*.pb
+*.tflite
+*.pt
+
+# Sample images
+sample_image/
+
+# Documentation
+doc/
 
 # PyCharm
 #  JetBrains specific template is maintainted in a separate JetBrains.gitignore that can

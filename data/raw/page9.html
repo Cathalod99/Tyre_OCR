@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DOT decoder">
+	<meta name="geo.region" content="HK" />
+	<meta name="geo.position" content="22.49455;114.142848" />
+	<meta name="ICBM" content="22.49455, 114.142848" />
+    <meta name="author" content="">
+	
+	<title>DOT decoder</title>
+	
+    <link href="//www.tyrehood.com/assets/css/bootstrap.css" rel="stylesheet">
+    <link href="//www.tyrehood.com/assets/css/main.css" rel="stylesheet">
+	<link href="//www.tyrehood.com/assets/css/font-awesome.min.css" rel="stylesheet">
+		
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="//www.tyrehood.com/assets/js/jquery.pause.js" type="text/javascript"></script>
+    <script src="//www.tyrehood.com/assets/js/jquery.marquee.js?v=3" type="text/javascript"></script>
+	
+    <script src="//www.tyrehood.com/assets/js/chart.js"></script>		
+
+	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-G1Q5C1GZ28"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'G-G1Q5C1GZ28');
+	</script>	
+	<!-- -->
+	<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+		  <div class="container">
+			<div class="navbar-header">
+			  <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			  </button>
+					  
+			<a href="index.php"><img src="//www.tyrehood.com/assets/img/logo-banner.png" alt="tyrehood"></img></a>
+			</div>
+				
+			<!-- -->
+			<div class="navbar-collapse collapse" id="bs-example-navbar-collapse-1">
+			  <ul class="nav navbar-nav navbar-right">
+				
+				<li class="active"><a href="downloadapps.php" target="_blank">Download apps</a></li>
+				<li class="active"><a href="login.php">Login</a> </li> 
+												
+						
+				
+				<li class="active"><a class="dropdown-toggle" style="cursor: pointer;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-labelledby="dropdownMenuButton">Services...<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+						<li class="active"><a href="https://www.tyrehood.com/en/car-battery.php">Battery</a></li>
+						<li class="active"><a href="https://www.tyrehood.com/en/autoparts.php">Autoparts</a></li> 
+						<li class="active"><a href="https://www.tyrehood.com/en/universal-tpms.php">TPMS sensors</a></li>						
+                    </ul>
+                </li>	
+				<li class="active"><a class="dropdown-toggle" style="cursor: pointer;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-labelledby="dropdownMenuButton">More...<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+						<li class="active"><a href="https://tyrehood.blogspot.hk" lang="en" hreflang="en" target="_blank">Blog</a></li> 
+						<li class="active"><a href="https://www.facebook.com/tyrehood.hk" target="_blank">Facebook</a></li> 
+						<li class="active"><a href="#sectionContactInfo">Contact</a></li>						
+                    </ul>
+                </li>				
+				<li class="active"><a href="https://www.tyrehood.com" lang="zh" hreflang="zh">中</a></li> 			
+			  </ul>			  			  
+			</div><!--/.nav-collapse -->
+		  </div>	
+	</nav>
+
+	
+  </head>
+  <body>	
+	<div id="fb-root"></div>
+	<script>(function(d, s, id) {
+	  var js, fjs = d.getElementsByTagName(s)[0];
+	  if (d.getElementById(id)) return;
+	  js = d.createElement(s); js.id = id;
+	  js.src = "https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v2.7";
+	  fjs.parentNode.insertBefore(js, fjs);
+	}(document, 'script', 'facebook-jssdk'));</script>
+
+	<div id="announcement">
+    <div class='marquee-with-options'>
+		
+		Dunlop Kumho Promotion offer until 29th Sep		
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		Self driving tour guide release&nbsp;&nbsp;			<a href="https://www.tyrehood.com/en/articles/selfdrivingtrip.php" target="_blank">Click here for detail</a>
+				
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		NorthBound Travel Insurance can find me for referral		
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		Vehicle Insurance Cover Note within day. Tyrehood Customers including suppliers staff enjoy further discount.		
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		QBE home insurance 20% off until 15th Sep&nbsp;&nbsp;			<a href="https://qnect.qbe.com/home/#/campaign/PROMOS/agent/375925/lang/EN/Quote" target="_blank">Click here for detail</a>
+				
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	</div>
+	</div>
+
+  
+  <script>
+$(function(){
+  var $mwo = $('.marquee-with-options');
+  $('.marquee').marquee();
+  $('.marquee-with-options').marquee({
+    //speed in milliseconds of the marquee
+    speed: 50,
+    //gap in pixels between the tickers
+    gap: 150,
+    //gap in pixels between the tickers
+    delayBeforeStart: 0,
+    //'left' or 'right'
+    direction: 'left',
+    //true or false - should the marquee be duplicated to show an effect of continues flow
+    duplicated: true,
+    //on hover pause the marquee - using jQuery plugin https://github.com/tobia/Pause
+    pauseOnHover: true
+  });
+
+  //Direction upward
+  $('.marquee-vert').marquee({
+    direction: 'up',
+    speed: 1500
+  });
+
+  //pause and resume links
+  $('.pause').click(function(e){
+    e.preventDefault();
+    $mwo.trigger('pause');
+  });
+  $('.resume').click(function(e){
+    e.preventDefault();
+    $mwo.trigger('resume');
+  });
+  //toggle
+  $('.toggle').hover(function(e){
+    $mwo.trigger('pause');
+  },function(){
+    $mwo.trigger('resume');
+  })
+  .click(function(e){
+    e.preventDefault();
+  })
+});
+</script>
+
+	<div class="container">
+		<div class="row mt centered">
+				<div class="col-lg-5 col-md-5 col-sm-5 tyre-profile-image">
+					<img src="//www.tyrehood.com/assets/img/dot.jpg" alt="dot"></img>
+				</div>
+				<div class="col-lg-7 col-md-7 col-sm-7">
+					<h1>Tyre DOT Decoder</h1>
+						<p style="font-size:18px">
+The US Department of Transportation established a requirement in January 1971 for a tire identification number (TIN)
+that must be labeled on one sidewall of each tire that is newly manufactured or retreaded. (to be sold in the U.S market)
+<br><br>
+The first two digits of the TIN indicate the manufacturer’s plant code, while the remaining digits indicate the tire size and date of manufacture.
+The length of the TIN was standardized to 13 symbols for new tires and 7 symbols for retreaded tires in April 2015.
+<br><br>
+Even though the code is mandated by the US Department of transport, it is used worldwide.
+Therefore the DOT code applies to all tires manufacturered for use on public roads, regardless
+of the market they are sold in. If the DOT code is not imprinted on the sidewall, it does not mean the tire is not authorized to be sold or a counterfeited product.
+It just mean the batch of tire is not sold to the market that requires the DOT by law. 
+<br>
+The list is for reference. Please refer to the U.S. Department of Transport for the latest update on the tyre DOT, especially on the status of the plant.
+						</p>					
+			
+				</div>
+			<br>
+		</div>			
+	</div>
+
+
+	<form method="post" action="/en/dotdecoder.php" onsubmit="return validateForm()">		
+		<span for="id">New Code: (three characters)</span>
+		<input type="text" id="newcode" name="newcode" maxlength="3"><input type="submit" name="new" value="Search NEW DOT">
+	</form>
+
+	<br>	
+	<form method="post" action="/en/dotdecoder.php" onsubmit="return validateForm()">		
+		
+		<span for="id">Old Code: (two characters)</span>
+		<input type="text" id="oldcode" name="oldcode" maxlength="2"><input type="submit" name="old" value="Submit Old DOT">  
+	</form>
+	<form method="post" action="/en/dotdecoder.php" onsubmit="return validateForm()">		
+	
+		<br>	
+		<input type="submit" name="all" value="List All">  
+   </form>
+
+
+		<b>Adjust the screen horizontally to view the list in full</b></div>
+  <div id="txtHint"><b>Last update: 14 Dec 2023</b></div>
+	<br>
+	Page: 
+	<a style='font-size:120%' href='dotdecoder.php?page=1'>1</a> <a style='font-size:120%' href='dotdecoder.php?page=2'>2</a> <a style='font-size:120%' href='dotdecoder.php?page=3'>3</a> <a style='font-size:120%' href='dotdecoder.php?page=4'>4</a> <a style='font-size:120%' href='dotdecoder.php?page=5'>5</a> <a style='font-size:120%' href='dotdecoder.php?page=6'>6</a> <a style='font-size:120%' href='dotdecoder.php?page=7'>7</a> <a style='font-size:120%' href='dotdecoder.php?page=8'>8</a> <a style='font-size:120%' href='dotdecoder.php?page=9'style='font-size:140%' ><b> >9</b></a> <a style='font-size:120%' href='dotdecoder.php?page=10'>10</a> <a style='font-size:120%' href='dotdecoder.php?page=11'>11</a> <a style='font-size:120%' href='dotdecoder.php?page=12'>12</a> 		<div class="table-responsive">
+			<table class="checkout-confirm-table">
+				<tbody>					
+					<tr>
+						<th align="center"><strong>Factory Name</strong></th>
+						<th align="center"><strong>DOT</strong></th>
+						<th align="center"><strong>Old DOT</strong></th>
+						<th align="center"><strong>Address</strong></th>		
+						<th align="center"><strong>COUNTRY</strong></th>		
+						<th align="center"><strong>STATUS</strong></th>		
+					</tr>		
+						<tr>
+						<td>QINGDAO CHONGKUN INDUSTRIAL DEVELOPMENT CO., LTD.</strong></td>
+						<td align="center"><strong>1R6</strong></td>
+						<td align="center"><strong>R6</strong></td>
+						<td>YINZHU TOWN,JIAONAN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGDAO HUASHI INDUSTRIAL PRODUCTS CO., LTD.</strong></td>
+						<td align="center"><strong>1RH</strong></td>
+						<td align="center"><strong>RH</strong></td>
+						<td>YINZHU TOWN, JIAONAN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>ANLAS ANADOLU LASTIK SANAYII VE TICARET A.S.</strong></td>
+						<td align="center"><strong>1RJ</strong></td>
+						<td align="center"><strong>RJ</strong></td>
+						<td>KARACALI MAH., DUZCE CAD 64, KAYNASLI</td>
+						<td>TURKEY</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DONGGUAN HUACHENG TYRE FACTORY</strong></td>
+						<td align="center"><strong>1RT</strong></td>
+						<td align="center"><strong>RT</strong></td>
+						<td>NO.610, SHIPAI ROAD EAST</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>NINGBO HUALIN</strong></td>
+						<td align="center"><strong>1WL</strong></td>
+						<td align="center"><strong>WL</strong></td>
+						<td>MUHU VILLAGE DITANG STREET</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>NANJING TIRE CO., LTD. TBR</strong></td>
+						<td align="center"><strong>1KV</strong></td>
+						<td align="center"><strong>KV</strong></td>
+						<td>NEW JINHU ROAD, GAOXIN DISTRICT</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>HWA FONG RUBBER CO.(SUZHOU) CO. LTD.</strong></td>
+						<td align="center"><strong>14N</strong></td>
+						<td align="center"><strong>4N</strong></td>
+						<td>XING YE ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BALKRISHNA INDUSTRIES LTD.(UNIT.BALKRISHNA TYRES)</strong></td>
+						<td align="center"><strong>19N</strong></td>
+						<td align="center"><strong>9N</strong></td>
+						<td>PLOT NO.A-300-305,E-306-313</td>
+						<td>INDIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGDAO QIANZHEN TYRE CO., LTD.</strong></td>
+						<td align="center"><strong>1TF</strong></td>
+						<td align="center"><strong>TF</strong></td>
+						<td>QIANLOU RUBBER INDUSTRIAL PARK</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DONGYING FANGXING RUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>1JN</strong></td>
+						<td align="center"><strong>JN</strong></td>
+						<td>DAQANG INDUSTRIAL AREA</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>TERCELO RUBBER TECHNOLOGY (DONGYING) CO.,LTD.</strong></td>
+						<td align="center"><strong>1KW</strong></td>
+						<td align="center"><strong>KW</strong></td>
+						<td>Xishui industrial Park, Guangrao County</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>NEW DONG YUE GROUP CO., LTD.</strong></td>
+						<td align="center"><strong>1KX</strong></td>
+						<td align="center"><strong>KX</strong></td>
+						<td>NO. 37 XISHAN RD.</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>WUXI YUANGFANG RUBBER ENGINEERING CO. LTD.</strong></td>
+						<td align="center"><strong>1LA</strong></td>
+						<td align="center"><strong>LA</strong></td>
+						<td>NONGBA VILLAGE, DONGBEITANG TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>WEIFANG DAWANG RUBBER PRODUCTS CO., LTD.</strong></td>
+						<td align="center"><strong>1KU</strong></td>
+						<td align="center"><strong>KU</strong></td>
+						<td>ZONE OF XIADIAN TOEN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BRIDGESTONE DO BRASIL INDUSTRIA E COMERCIO LTDA./BAHIA</strong></td>
+						<td align="center"><strong>196</strong></td>
+						<td align="center"><strong>96</strong></td>
+						<td>RODOVIA BA 535, KM 11.5</td>
+						<td>BRAZIL</td>
+						<td>Closed</td>
+						</tr>												
+						<tr>
+						<td>SHANGHAI RHODEN RUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>197</strong></td>
+						<td align="center"><strong>97</strong></td>
+						<td>599 HWA DAN ROAD, HWA XIN TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGDAO MALIK INT'L TRADE CO., LTD.</strong></td>
+						<td align="center"><strong>199</strong></td>
+						<td align="center"><strong>99</strong></td>
+						<td>ECONOMICAL TECHNICAL DEVELOPMENT ZONE</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG HUGERUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>19W</strong></td>
+						<td align="center"><strong>9W</strong></td>
+						<td>XISHUI INDUSTRIAL ZONE</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SUMITOMO RUBBER (THAILAND) CO., LTD.</strong></td>
+						<td align="center"><strong>1R8</strong></td>
+						<td align="center"><strong>R8</strong></td>
+						<td>7/232 MOO.6 TAMBOL MABYANGPORN</td>
+						<td>THAILAND</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>TAIZHOU JULUN TYRE CO., LTD.</strong></td>
+						<td align="center"><strong>1R9</strong></td>
+						<td align="center"><strong>R9</strong></td>
+						<td>43 REGION 1,CHANGPUSHICHENG VILLAGE</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>MARANGONI PNEUMATICI</strong></td>
+						<td align="center"><strong>1RN</strong></td>
+						<td align="center"><strong>RN</strong></td>
+						<td>VIA DEL GARDA, 6</td>
+						<td>ITALY</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>TAIZHOU TAIYANGFENG RUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>1RP</strong></td>
+						<td align="center"><strong>RP</strong></td>
+						<td>GUANSHAN VILLAGE CHENGGUAN TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>VIZAHEM</strong></td>
+						<td align="center"><strong>1RU</strong></td>
+						<td align="center"><strong>RU</strong></td>
+						<td>P.DIMITRIJA</td>
+						<td>SERBIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>WUYI FENGYUAN MINING MACHINE MANUFACTOR CO.LTD.</strong></td>
+						<td align="center"><strong>1WK</strong></td>
+						<td align="center"><strong>WK</strong></td>
+						<td>INDUSTRIAL ZONE BAIYANG</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG ZHENGXING TYRES CO., LTD.</strong></td>
+						<td align="center"><strong>1JB</strong></td>
+						<td align="center"><strong>JB</strong></td>
+						<td>MACHANGHU TOWN,LANSHAN DISTRICT</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>TOLINS TYRES PVT, LTD.</strong></td>
+						<td align="center"><strong>1XV</strong></td>
+						<td align="center"><strong>XV</strong></td>
+						<td>M.C. ROAD</td>
+						<td>INDIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DONGYING TIANTONG RUBBER & PLASTIC CO., LTD.</strong></td>
+						<td align="center"><strong>1KY</strong></td>
+						<td align="center"><strong>KY</strong></td>
+						<td>DAWANG INDUSTRY ZONE</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>FARBENFABRIKEN BAYER GMBH</strong></td>
+						<td align="center"><strong>1U5</strong></td>
+						<td align="center"><strong>U5</strong></td>
+						<td></td>
+						<td>GERMANY</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>HANKOOK TIRE HUNGARY LTD.</strong></td>
+						<td align="center"><strong>12X</strong></td>
+						<td align="center"><strong>2X</strong></td>
+						<td>HANKOOK TER 1.</td>
+						<td>HUNGARY</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>PIRELLI ARMSTRONG TIRE CORPORATION</strong></td>
+						<td align="center"><strong>1CK</strong></td>
+						<td align="center"><strong>CK</strong></td>
+						<td></td>
+						<td>UNITED STATES</td>
+						<td>Closed</td>
+						</tr>												
+						<tr>
+						<td>MRF LTD-TRICHY (RADIAL TYRE PLANT)</strong></td>
+						<td align="center"><strong>1YA</strong></td>
+						<td align="center"><strong>YA</strong></td>
+						<td>NARANAMANGALAM VILLAGE  & KUNNAM TALUK</td>
+						<td>INDIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>NUMSIAM RUBBER (LAOS) CO., LTD</strong></td>
+						<td align="center"><strong>1YH</strong></td>
+						<td align="center"><strong>YH</strong></td>
+						<td>ENSAVAN BORDER TRADE ZONE</td>
+						<td>LAOS</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGZHOU HUACHEN RUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>1XW</strong></td>
+						<td align="center"><strong>XW</strong></td>
+						<td>GAOLIUNTOWN XUWANG VILLAGE</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG HUASHENG RUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>1AC</strong></td>
+						<td align="center"><strong>AC</strong></td>
+						<td>DAOZHUANG TOWN, GUANGRAO DISTRICT</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>LLIT (THAILAND) CO., LTD.</strong></td>
+						<td align="center"><strong>1YC</strong></td>
+						<td align="center"><strong>YC</strong></td>
+						<td>HEMARAJ EASTERN SEABOARD INDUSTRIAL ESTATES</td>
+						<td>THAILAND</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>WUXI DOUBLE FLYING</strong></td>
+						<td align="center"><strong>1KR</strong></td>
+						<td align="center"><strong>KR</strong></td>
+						<td>NANGCHANG</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BRIDGESTONE (HUIZHOU) TIRE CO., LTD/HUIZHOU</strong></td>
+						<td align="center"><strong>198</strong></td>
+						<td align="center"><strong>98</strong></td>
+						<td>NO 8. HUITAI ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BINH LOI RUBBER FACTORY</strong></td>
+						<td align="center"><strong>1MP</strong></td>
+						<td align="center"><strong>MP</strong></td>
+						<td>2/3 KHA VAN CAN-HIEP BINH CHANH WARD</td>
+						<td>VIETNAM</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>HWA FONG RUBBER (CHINA) CO., LTD.</strong></td>
+						<td align="center"><strong>16W</strong></td>
+						<td align="center"><strong>6W</strong></td>
+						<td>NO.1 CHANG JIANG ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SIAMESE TYRE CO., LTD.</strong></td>
+						<td align="center"><strong>17W</strong></td>
+						<td align="center"><strong>7W</strong></td>
+						<td>86 MOO 3 SUWINTHAWONG</td>
+						<td>THAILAND</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>HANKOOK TIRE CHINA CO., LTD.</strong></td>
+						<td align="center"><strong>216</strong></td>
+						<td align="center"><strong>1G</strong></td>
+						<td>JIAXING ECONOMIC DEVELOPMENT ZONE EAST ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG CASCEN RUBBER IND., LTD.</strong></td>
+						<td align="center"><strong>1N8</strong></td>
+						<td align="center"><strong>N8</strong></td>
+						<td>NO.8 XICHANG ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>INTERNATIONAL MACHINERY & EQUIPMENT (ZHENGZHOU) CO. LTD.</strong></td>
+						<td align="center"><strong>1RL</strong></td>
+						<td align="center"><strong>RL</strong></td>
+						<td>NO. 36 ZHENGHUA RD.</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DOUBLE COIN GROUP (CHONGQING) TIRE CO., LTD.</strong></td>
+						<td align="center"><strong>1TP</strong></td>
+						<td align="center"><strong>TP</strong></td>
+						<td>63 SI CHUAN ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG LINGLONG TYRE CO., LTD.</strong></td>
+						<td align="center"><strong>1KF</strong></td>
+						<td align="center"><strong>KF</strong></td>
+						<td>NO. 170 JINCHENG ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>YOKOHAMA TIRE PHILIPPINES INC.</strong></td>
+						<td align="center"><strong>14U</strong></td>
+						<td align="center"><strong>4U</strong></td>
+						<td>1E5, Clark Special Economic Zone</td>
+						<td>Philippines</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DANANG RUBBER JOINT STOCK COMPANY</strong></td>
+						<td align="center"><strong>1KT</strong></td>
+						<td align="center"><strong>KT</strong></td>
+						<td>LOT G, TA QUANG BUU STREET, LIEN CHIEU INDUSTRIAL ZONE</td>
+						<td>VIETNAM</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>Zhucheng Yongan Rubber Technology Co., Ltd</strong></td>
+						<td align="center"><strong>1YK</strong></td>
+						<td align="center"><strong>YK</strong></td>
+						<td>No. 263 Zhufeng Street</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>TITAN TIRE CORP. OF TEXAS</strong></td>
+						<td align="center"><strong>236</strong></td>
+						<td align="center"><strong>3G</strong></td>
+						<td></td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SAILUN (VIETNAM) CO., LTD.</strong></td>
+						<td align="center"><strong>1YJ</strong></td>
+						<td align="center"><strong>YJ</strong></td>
+						<td>LOT 37-1..42-6-1, PHUOC</td>
+						<td>VIETNAM</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG HAVSTYEAR RUBBER TECHNOLOGY CO., LTD.</strong></td>
+						<td align="center"><strong>1M9</strong></td>
+						<td align="center"><strong>M9</strong></td>
+						<td>AGRICULTURE HIGH-TECH INDUSTRIES</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGDAO TAIFA GROUP CP., LTD.</strong></td>
+						<td align="center"><strong>19P</strong></td>
+						<td align="center"><strong>9P</strong></td>
+						<td>YINZHU TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG YINBAO TYRE GROUP CO., LTD.</strong></td>
+						<td align="center"><strong>1BP</strong></td>
+						<td align="center"><strong>BP</strong></td>
+						<td>Taitou Industrial Park, Shouguang,</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>TENGZHOU BRONCHO TYRE CO., LTD.</strong></td>
+						<td align="center"><strong>192</strong></td>
+						<td align="center"><strong>92</strong></td>
+						<td>WEST SIDE OF FLAT GLASS FACTORY</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGDAO LONGHAI TIRE MANUFACTURING CO., LTD.</strong></td>
+						<td align="center"><strong>194</strong></td>
+						<td align="center"><strong>94</strong></td>
+						<td>ZHENGYANG (E) ROAD, CHENGYANG DISTRICT</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>MATADOR-OMSKSHINA</strong></td>
+						<td align="center"><strong>1DP</strong></td>
+						<td align="center"><strong>DP</strong></td>
+						<td>5TH KORDNAJA 2</td>
+						<td>RUSSIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGDAO FUYUAN TYRE CO., LTD.</strong></td>
+						<td align="center"><strong>1DT</strong></td>
+						<td align="center"><strong>DT</strong></td>
+						<td>QINGLOU INDUSTRIAL PARK, PINGDU</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>AMTEL VORONEZH</strong></td>
+						<td align="center"><strong>1JW</strong></td>
+						<td align="center"><strong>JW</strong></td>
+						<td>ROSTOVSKAYA STR. 41</td>
+						<td>RUSSIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>WEIHAI PINGAN TYRE CO., LTD.</strong></td>
+						<td align="center"><strong>1PR</strong></td>
+						<td align="center"><strong>PR</strong></td>
+						<td>HUANGSHAN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BOULDER CITY PLANT</strong></td>
+						<td align="center"><strong>1R0</strong></td>
+						<td align="center"><strong>R0</strong></td>
+						<td>1501 INDUSTRIAL ROAD</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>TIANJIN ZHENXIN RUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>1R2</strong></td>
+						<td align="center"><strong>R2</strong></td>
+						<td>XUMU YANJIUSUO ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>ZHEJIANG XINCHANG ZHONGYA INDUSTRY</strong></td>
+						<td align="center"><strong>1R3</strong></td>
+						<td align="center"><strong>R3</strong></td>
+						<td>MEIZHU INDUSTRIAL PARK</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>YOKOHAMA TIRE MANUFACTURING MISSISSIPPI, LLC</strong></td>
+						<td align="center"><strong>1FA</strong></td>
+						<td align="center"><strong>FA</strong></td>
+						<td>1850 BARTON FERRY ROAD</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG HENGYU RUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>1R5</strong></td>
+						<td align="center"><strong>R5</strong></td>
+						<td>DAWANG INDUSTRIAL PARK</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BRIDGESTONE NEUMATICOS DE MONTERREY, S.A. DE C.V./ MONTERREY</strong></td>
+						<td align="center"><strong>1RB</strong></td>
+						<td align="center"><strong>RB</strong></td>
+						<td>AVENIDA DEL PARQUE NO 1000 FRACC. INDUSTRIAL MONTERREY</td>
+						<td>MEXICO</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>ETERNAL RISE TYRE (TIANJIN) CO., LTD.</strong></td>
+						<td align="center"><strong>1RV</strong></td>
+						<td align="center"><strong>RV</strong></td>
+						<td>FENGDA</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG CHANGFENG TYRES CO., LTD.</strong></td>
+						<td align="center"><strong>1RY</strong></td>
+						<td align="center"><strong>RY</strong></td>
+						<td>GUANGRAO NEW & HICH TECHNOLIGY DEVELOPMENT ZONE</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANGHAI HANGHONG RUBBER MANUFACTORY</strong></td>
+						<td align="center"><strong>1WJ</strong></td>
+						<td align="center"><strong>WJ</strong></td>
+						<td>71, XINGSHENG ROAD, PUDONG DISTRICT</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>Wanli Tire Corporation Limited</strong></td>
+						<td align="center"><strong>1WP</strong></td>
+						<td align="center"><strong>WP</strong></td>
+						<td>No.3 Wanli Road, Aotou Town, Conghua</td>
+						<td>China</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SAILUN (DONGYING) TIRE CO., LTD.</strong></td>
+						<td align="center"><strong>1KE</strong></td>
+						<td align="center"><strong>KE</strong></td>
+						<td>No.9 Guangxing Road, Guangrao Economic & Technological Development Zone</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>ARAI SHOJI CO., LTD.</strong></td>
+						<td align="center"><strong>1PU</strong></td>
+						<td align="center"><strong>PU</strong></td>
+						<td>1-121-3F HIGASHI-SHINBASHI</td>
+						<td>JAPAN</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG WONBON RUBBER CO., LTD</strong></td>
+						<td align="center"><strong>1MV</strong></td>
+						<td align="center"><strong>MV</strong></td>
+						<td>GUANGRAO ECONOMIC DEVELOPMENT AREA</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SAILUN (SHENYANG) TIRE CO., LTD</strong></td>
+						<td align="center"><strong>1MW</strong></td>
+						<td align="center"><strong>MW</strong></td>
+						<td>No.2, EAST SHENXISAN ROAD, SHENYANG CHEMICAL INDUSTRY GARDEN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>GOODYEAR DALIAN TIRE COMPANY LTD.</strong></td>
+						<td align="center"><strong>1TC</strong></td>
+						<td align="center"><strong>TC</strong></td>
+						<td>#8 ZHENXING STREET</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>WEIFANG HUADONG RUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>1NV</strong></td>
+						<td align="center"><strong>NV</strong></td>
+						<td>PO BOX 262735, TAITOU INDUSTRY ZONE</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>JINYONG (QINGYUAN) RUBBER INDUSTRIAL CO., LTD</strong></td>
+						<td align="center"><strong>1NF</strong></td>
+						<td align="center"><strong>NF</strong></td>
+						<td>XIASHAN INDUSTRIAL PARK YUANTAN TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>TIANJIN XIELI RUBBER PRODUCT LIMITED CO.</strong></td>
+						<td align="center"><strong>1NM</strong></td>
+						<td align="center"><strong>NM</strong></td>
+						<td>ANIMAL HUSBANDRY RESEARCH INSTITUTE ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>CHONGQING DRAGON RUBBER PRODUCTS CO., LTD.</strong></td>
+						<td align="center"><strong>1NN</strong></td>
+						<td align="center"><strong>NN</strong></td>
+						<td>46# OIXIN ROAD, YANIJIAINDUSTRY PARK</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>WEIFANG ANGU RUBBER INDUSTRY CO., LTD.</strong></td>
+						<td align="center"><strong>1NX</strong></td>
+						<td align="center"><strong>NX</strong></td>
+						<td>DAOKOU VILLAGE, TAITOU TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>ACME RUBBER IND. CO., LTD.</strong></td>
+						<td align="center"><strong>1TD</strong></td>
+						<td align="center"><strong>TD</strong></td>
+						<td>NO. 45 SINGONG 6TH RD.</td>
+						<td>TAIWAN</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGDAO SENTURY TIRE CO., LTD.</strong></td>
+						<td align="center"><strong>1P2</strong></td>
+						<td align="center"><strong>P2</strong></td>
+						<td>NO. 7 TIANSAN 3rd ROAD, DAXIA TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>THE CARLSTAR GROUP LLC</strong></td>
+						<td align="center"><strong>1P4</strong></td>
+						<td align="center"><strong>P4</strong></td>
+						<td>2500 DR F E WRIGHT DRIVE</td>
+						<td>UNITED STATES (USA)</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>Apollo Tyres Ltd - Chennai</strong></td>
+						<td align="center"><strong>1P0</strong></td>
+						<td align="center"><strong>P0</strong></td>
+						<td> B 25 SIPCOT Industrial Growth Centre</td>
+						<td>India</td>
+						<td></td>
+						</tr>												
+						<tr>
+						<td>DONGYING DURUN TYRE CO., LTD</strong></td>
+						<td align="center"><strong>1PH</strong></td>
+						<td align="center"><strong>PH</strong></td>
+						<td>RUBBER INDUSTRY ZONE</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG FENGYUAN TIRE MANUFACTURING CO., LTD</strong></td>
+						<td align="center"><strong>1LB</strong></td>
+						<td align="center"><strong>LB</strong></td>
+						<td>YICHENG ECONOMIC DEVELOPMENT AONE</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGDAO CHENGTAI HAND TRUCK CO, LTD</strong></td>
+						<td align="center"><strong>1PM</strong></td>
+						<td align="center"><strong>PM</strong></td>
+						<td>LANGYA DISTRICT, JIAONAN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SIFUTE INDUSTRIAL GROUP, LTD.</strong></td>
+						<td align="center"><strong>1PN</strong></td>
+						<td align="center"><strong>PN</strong></td>
+						<td>DAWANG TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>WEIFANG SHUNFUCHANG RUBBER & PLASTIC CO., LTD.</strong></td>
+						<td align="center"><strong>2TW</strong></td>
+						<td align="center"><strong>TW</strong></td>
+						<td>GOVERNMENT STATION, HUALONG TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DONGYING ZHANGAO RUBBER CO.,LTD.</strong></td>
+						<td align="center"><strong>1PP</strong></td>
+						<td align="center"><strong>PP</strong></td>
+						<td>Fuxingwang Village, Dawang Town, Guangrao County</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGDAO HUAWU RUBBER & PLASTIC CO., LTD.</strong></td>
+						<td align="center"><strong>1PF</strong></td>
+						<td align="center"><strong>PF</strong></td>
+						<td>JIAONAN TIESHAN INDUSTRIAL ZONE</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>TECHNO INNOVATIVE RUBBER ENTERPRISE INC.</strong></td>
+						<td align="center"><strong>1PX</strong></td>
+						<td align="center"><strong>PX</strong></td>
+						<td>80 MIDWEST RD. UNIT 22-24</td>
+						<td>CANADA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SENTURY TIRE (THAILAND) CO., LTD.</strong></td>
+						<td align="center"><strong>1TB</strong></td>
+						<td align="center"><strong>TB</strong></td>
+						<td>M. 2 BANYAYIAN TONKABOK KASETSIRI TAMBOL</td>
+						<td>THAILAND</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>WEIFANG HUARI RUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>1PY</strong></td>
+						<td align="center"><strong>PY</strong></td>
+						<td>DAOKOU VILLAGE, TAITOU TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGDAO MOREWIN RUBBERWARE CO., LTD.</strong></td>
+						<td align="center"><strong>1TU</strong></td>
+						<td align="center"><strong>TU</strong></td>
+						<td>ZHANGJIALOU TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>CST Rubber (Zhangzhou) Ind. Ltd.</strong></td>
+						<td align="center"><strong>1TE</strong></td>
+						<td align="center"><strong>TE</strong></td>
+						<td>No. 15 Qingshi Road, Gangwei District</td>
+						<td>China</td>
+						<td></td>
+						</tr>												
+						<tr>
+						<td>WEIFANG LONGSHAN TYRE CO., LTD.</strong></td>
+						<td align="center"><strong>1TH</strong></td>
+						<td align="center"><strong>TH</strong></td>
+						<td>CHAIGOU TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>WEIFANG YUELONG RUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>17P</strong></td>
+						<td align="center"><strong>7P</strong></td>
+						<td>HETOU VILLAGE</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>CHAOYANG LONG MARCH TYRE NEW CO., LTD.</strong></td>
+						<td align="center"><strong>1TJ</strong></td>
+						<td align="center"><strong>TJ</strong></td>
+						<td>NO.1 XIANGYANG ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>TOYO TIRE & RUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>1PW</strong></td>
+						<td align="center"><strong>PW</strong></td>
+						<td>58# DONG HAI ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SICHUAN KALEVEI TECHNOLOGY CO., LTD.</strong></td>
+						<td align="center"><strong>1TL</strong></td>
+						<td align="center"><strong>TL</strong></td>
+						<td>NO.1 KALEVEI INDUSTRIAL ROAD, INDUSTRIAL PARK</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+	
+				</tbody>
+			</table>
+		</div>
+				<div class="h20"></div>
+			
+<footer>
+	<div id = "f">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-4 col-sm-4 col-md-4">
+					<p><a href="car-battery.php">Autmotive Battery</a></p>
+					<p><a href="autoparts.php">Automobile Parts</a></p>			
+					<br>
+					<p><a href="tirebrands.php">List of tyre brands</a></p>	
+					<p><a href="batterybrands.php">List of Battery Brands</a></p>
+					<br>					
+					<p><a href="tyremarking.php">Tyre marking glossary</a></p>
+					<p><a href="glossary.php">Glossary</a></p>
+					<br>					
+					<p><a href="data.php">Consumption Data Research</a></p>								
+					<p><a href="3dprinting.php">3D Printing Case Studies</a></p>			
+				</div>
+				<div class="col-lg-4 col-sm-4 col-md-4">
+					<p><a href="aboutus.php">About us</a></p>
+					<br>			
+					<p><a href="faq.php">Frequently Asked Questions</a></p>
+					<p><a href="terms.html">Terms of use</a></p>					
+					<p><a href="articles.php">News and Articles</a></p>	
+					<br>
+					<p><a href="weather.html">Inclement weather arrangement</a></p>	
+					<p><a href="">Store Closing/Opening Special Arrangement</a></p>		
+					<br>					
+					<p><a href="#sectionContactInfo">Advertisement Enquiry</a></p>
+					<br>
+					<p><a href="">Tyrehood Zone Customer Access</a></p>
+					<p><a href="">DIY Vehicle Management List</a></p>
+				</div>
+				<div class="col-lg-4 col-sm-4 col-md-4">
+					<a href='https://play.google.com/store/apps/details?id=com.tyrehood.tyrehoodzone&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img style="width:90%" alt='立即下載 Google Play' src='//www.tyrehood.com/assets/img/google-play-badge-en.png'/></a>
+					<a href='https://apps.apple.com/app/id1476499495'><img src="//www.tyrehood.com/assets/img/iosBadgeEn.svg" style="margin: 5%; width:80%" alt="ios app Tyrehood Zone"></a>				
+					<p>Payment Method</p>
+					<img src="//www.tyrehood.com/assets/img/fps.png" alt="fps"> &nbsp &nbsp &nbsp
+					<img src="//www.tyrehood.com/assets/img/atm.png" alt="atm"> &nbsp &nbsp &nbsp
+					<img src="//www.tyrehood.com/assets/img/cash.png" alt="cash">
+				</div>
+			</div>
+		</div>
+		<br>
+		<div class="brand"> 						
+			All rights reserved 	&copy; - 2016-2025 Tyrehood 呔酷膠輪電池公司	 &ensp; &ensp;				
+		</div>
+		<br>
+		<br>
+	</div>		
+</footer>
+
+    <script src="//www.tyrehood.com/assets/js/bootstrap.js" type="text/javascript"></script>	
+	
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/58c236d25b8fe5150eeef5bb/default';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->	
+  </body>
+</html>

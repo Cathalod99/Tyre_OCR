@@ -1,79 +1,76 @@
-import cv2
-from Yolo import YOLOv11
-from OCR import *
+# main.py - GPT-based Tyre OCR System
+import os, json, cv2
+from pathlib import Path
+from Yolo.YOLO import YOLOv11
+from OCR.vision import detect_text
 from convert import warpPolar
-from OpenAI import *
-import json
-import os
-# Initialize yolov8 object detector
+from OpenAI.gpt import get_tyre_info  # returns a dict
 
-model_path = "models/Tyre_Detect.onnx"
-yolov11_detector = YOLOv11(model_path, conf_thres=0.2, iou_thres=0.3)
+MODEL_PATH = "models/Tyre_Detect.onnx"
+IMAGE_FOLDER = Path("sample_image")
+DOC_IMG_DIR = Path("doc/img")
+VALID_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".webp"}
 
-image_folder = "sample_image"
-file_list = os.listdir(image_folder)
-valid_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".webp"}
+DOC_IMG_DIR.mkdir(parents=True, exist_ok=True)
+IMAGE_FOLDER.mkdir(parents=True, exist_ok=True)
 
-for file_name in file_list:
-    if not os.path.splitext(file_name)[1].lower() in valid_extensions:
+# Clear previous images in doc/img directory
+print("🧹 Clearing previous images from doc/img directory...")
+for file_path in DOC_IMG_DIR.glob("*"):
+    if file_path.is_file():
+        file_path.unlink()
+        print(f"  🗑️ Deleted: {file_path.name}")
+print("✅ Previous images cleared\n")
+
+# Initialize models
+yolov11 = YOLOv11(MODEL_PATH, conf_thres=0.2, iou_thres=0.3)
+
+for image_path in sorted(p for p in IMAGE_FOLDER.iterdir() if p.suffix.lower() in VALID_EXT):
+    print(f"Processing: {image_path.name}")
+    img = cv2.imread(str(image_path))
+    if img is None:
+        print(f"⚠️ Could not read image: {image_path}")
         continue
-    print(f"Processing: {file_name}")
-    img_path = os.path.join(image_folder, file_name)
-    # Read image
-    img = cv2.imread(img_path)
-    # Detect Objects
-    ocr_crops,boxes, scores, class_ids = yolov11_detector(img)
 
-    # Draw detections
-    combined_img = yolov11_detector.draw_detections(img)
+    ocr_crops, boxes, scores, class_ids = yolov11(img)
+    vis = yolov11.draw_detections(img)
+    cv2.imwrite(str(DOC_IMG_DIR / f"{image_path.stem}_detect.jpg"), vis)
 
-    # cv2.namedWindow("Detected Objects", cv2.WINDOW_NORMAL)
-    # cv2.imshow("Detected Objects", combined_img)
-    cv2.imwrite(f"doc/img/{file_name.split('.')[0]}_detect.jpg", combined_img)
+    if not ocr_crops:
+        print("  ⚠️ No OCR crops detected.")
+        continue
 
-    for ocr_crop in ocr_crops:
-        [x1, y1, x2, y2] = ocr_crop
-        if (x1 < 0): 
-            x1 = 0
-        if (x2 < 0): 
-            x2 = 0
-        if (y1 < 0): 
-            y1 = 0
-        if (y2 < 0): 
-            y2 = 0
-        tyre_crop = img[int(y1):int(y2), int(x1):int(x2), :]
-        # license_plate_crop_gray = cv2.cvtColor(license_plate_crop, cv2.COLOR_BGR2GRAY)
-        # license_plate_text, license_plate_text_score = read_license_plate(license_plate_crop_thresh)
-        # print(license_plate_text)
-        # cv2.namedWindow("Tyre", cv2.WINDOW_NORMAL)
-        # cv2.imshow("Tyre", tyre_crop)
-        cv2.imwrite(f"doc/img/{file_name.split('.')[0]}_tyre.jpg", tyre_crop)
-        warpPolar(f"doc/img/{file_name.split('.')[0]}_tyre.jpg")
-        
-        ocr_result = detect_text(f"doc/img/{file_name.split('.')[0]}_tyre_convert.jpg")
-        if ocr_result == None:
-            print("Not detected any character!!!")
+    for (x1, y1, x2, y2) in ocr_crops:
+        x1, y1, x2, y2 = map(int, (max(0,x1), max(0,y1), max(0,x2), max(0,y2)))
+        crop = img[y1:y2, x1:x2, :]
+        crop_path = DOC_IMG_DIR / f"{image_path.stem}_tyre.jpg"
+        cv2.imwrite(str(crop_path), crop)
+
+        # Enhance & OCR
+        print("  🔄 Enhancing tire image for better OCR...")
+        warpPolar(str(crop_path))
+        enhanced = DOC_IMG_DIR / f"{image_path.stem}_tyre_convert.jpg"
+        print(f"  📁 Enhanced image saved to: {enhanced}")
+        ocr_text = detect_text(str(enhanced))
+        if not ocr_text:
+            print("  ⚠️ No characters detected.")
             continue
-        # print(ocr_result)
-        final_result = get_tyre_info(ocr_result)  # This returns a string\
-        # print(final_result)
-        final_result = final_result.strip("```")
-        final_result = final_result.replace("json", "")
-        final_result_json = json.loads(final_result)  # Convert string to JSON
 
-        text_name = file_name.split(".")[0] + ".txt"
-        text_path = os.path.join(image_folder, text_name)
-        with open(text_path, "w", encoding="utf-8") as file:
-            # Write the OCR result
-            file.write("OCR Result:\n")
-            file.write(ocr_result)
-            file.write("\n\n")  # Add spacing between sections
+        # LLM + rules → dict
+        result = get_tyre_info(ocr_text)
+        if not isinstance(result, dict):
+            s = str(result).strip().strip("`").replace("json", "", 1)
+            try:
+                result = json.loads(s)
+            except Exception:
+                result = {"_raw": s}
 
-            # Write the final result JSON
-            file.write("Final Result JSON:\n")
-            json.dump(final_result_json, file, indent=4, ensure_ascii=False)  # Write JSON in a readable format
+        # Save alongside image
+        out_path = IMAGE_FOLDER / f"{image_path.stem}.txt"
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write("OCR Result:\n")
+            f.write(ocr_text if isinstance(ocr_text, str) else str(ocr_text))
+            f.write("\n\nFinal Result JSON:\n")
+            json.dump(result, f, indent=4, ensure_ascii=False)
 
-        print(f"OCR result and final JSON result have been saved to {text_name}.")
-
-        # print(final_result_json)
-    # cv2.waitKey(0)
+        print(f"OCR result and final JSON result have been saved to {out_path.name}.")

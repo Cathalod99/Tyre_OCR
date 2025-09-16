@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DOT decoder">
+	<meta name="geo.region" content="HK" />
+	<meta name="geo.position" content="22.49455;114.142848" />
+	<meta name="ICBM" content="22.49455, 114.142848" />
+    <meta name="author" content="">
+	
+	<title>DOT decoder</title>
+	
+    <link href="//www.tyrehood.com/assets/css/bootstrap.css" rel="stylesheet">
+    <link href="//www.tyrehood.com/assets/css/main.css" rel="stylesheet">
+	<link href="//www.tyrehood.com/assets/css/font-awesome.min.css" rel="stylesheet">
+		
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="//www.tyrehood.com/assets/js/jquery.pause.js" type="text/javascript"></script>
+    <script src="//www.tyrehood.com/assets/js/jquery.marquee.js?v=3" type="text/javascript"></script>
+	
+    <script src="//www.tyrehood.com/assets/js/chart.js"></script>		
+
+	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-G1Q5C1GZ28"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'G-G1Q5C1GZ28');
+	</script>	
+	<!-- -->
+	<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+		  <div class="container">
+			<div class="navbar-header">
+			  <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			  </button>
+					  
+			<a href="index.php"><img src="//www.tyrehood.com/assets/img/logo-banner.png" alt="tyrehood"></img></a>
+			</div>
+				
+			<!-- -->
+			<div class="navbar-collapse collapse" id="bs-example-navbar-collapse-1">
+			  <ul class="nav navbar-nav navbar-right">
+				
+				<li class="active"><a href="downloadapps.php" target="_blank">Download apps</a></li>
+				<li class="active"><a href="login.php">Login</a> </li> 
+												
+						
+				
+				<li class="active"><a class="dropdown-toggle" style="cursor: pointer;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-labelledby="dropdownMenuButton">Services...<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+						<li class="active"><a href="https://www.tyrehood.com/en/car-battery.php">Battery</a></li>
+						<li class="active"><a href="https://www.tyrehood.com/en/autoparts.php">Autoparts</a></li> 
+						<li class="active"><a href="https://www.tyrehood.com/en/universal-tpms.php">TPMS sensors</a></li>						
+                    </ul>
+                </li>	
+				<li class="active"><a class="dropdown-toggle" style="cursor: pointer;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-labelledby="dropdownMenuButton">More...<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+						<li class="active"><a href="https://tyrehood.blogspot.hk" lang="en" hreflang="en" target="_blank">Blog</a></li> 
+						<li class="active"><a href="https://www.facebook.com/tyrehood.hk" target="_blank">Facebook</a></li> 
+						<li class="active"><a href="#sectionContactInfo">Contact</a></li>						
+                    </ul>
+                </li>				
+				<li class="active"><a href="https://www.tyrehood.com" lang="zh" hreflang="zh">中</a></li> 			
+			  </ul>			  			  
+			</div><!--/.nav-collapse -->
+		  </div>	
+	</nav>
+
+	
+  </head>
+  <body>	
+	<div id="fb-root"></div>
+	<script>(function(d, s, id) {
+	  var js, fjs = d.getElementsByTagName(s)[0];
+	  if (d.getElementById(id)) return;
+	  js = d.createElement(s); js.id = id;
+	  js.src = "https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v2.7";
+	  fjs.parentNode.insertBefore(js, fjs);
+	}(document, 'script', 'facebook-jssdk'));</script>
+
+	<div id="announcement">
+    <div class='marquee-with-options'>
+		
+		Dunlop Kumho Promotion offer until 29th Sep		
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		Self driving tour guide release&nbsp;&nbsp;			<a href="https://www.tyrehood.com/en/articles/selfdrivingtrip.php" target="_blank">Click here for detail</a>
+				
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		NorthBound Travel Insurance can find me for referral		
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		Vehicle Insurance Cover Note within day. Tyrehood Customers including suppliers staff enjoy further discount.		
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		QBE home insurance 20% off until 15th Sep&nbsp;&nbsp;			<a href="https://qnect.qbe.com/home/#/campaign/PROMOS/agent/375925/lang/EN/Quote" target="_blank">Click here for detail</a>
+				
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	</div>
+	</div>
+
+  
+  <script>
+$(function(){
+  var $mwo = $('.marquee-with-options');
+  $('.marquee').marquee();
+  $('.marquee-with-options').marquee({
+    //speed in milliseconds of the marquee
+    speed: 50,
+    //gap in pixels between the tickers
+    gap: 150,
+    //gap in pixels between the tickers
+    delayBeforeStart: 0,
+    //'left' or 'right'
+    direction: 'left',
+    //true or false - should the marquee be duplicated to show an effect of continues flow
+    duplicated: true,
+    //on hover pause the marquee - using jQuery plugin https://github.com/tobia/Pause
+    pauseOnHover: true
+  });
+
+  //Direction upward
+  $('.marquee-vert').marquee({
+    direction: 'up',
+    speed: 1500
+  });
+
+  //pause and resume links
+  $('.pause').click(function(e){
+    e.preventDefault();
+    $mwo.trigger('pause');
+  });
+  $('.resume').click(function(e){
+    e.preventDefault();
+    $mwo.trigger('resume');
+  });
+  //toggle
+  $('.toggle').hover(function(e){
+    $mwo.trigger('pause');
+  },function(){
+    $mwo.trigger('resume');
+  })
+  .click(function(e){
+    e.preventDefault();
+  })
+});
+</script>
+
+	<div class="container">
+		<div class="row mt centered">
+				<div class="col-lg-5 col-md-5 col-sm-5 tyre-profile-image">
+					<img src="//www.tyrehood.com/assets/img/dot.jpg" alt="dot"></img>
+				</div>
+				<div class="col-lg-7 col-md-7 col-sm-7">
+					<h1>Tyre DOT Decoder</h1>
+						<p style="font-size:18px">
+The US Department of Transportation established a requirement in January 1971 for a tire identification number (TIN)
+that must be labeled on one sidewall of each tire that is newly manufactured or retreaded. (to be sold in the U.S market)
+<br><br>
+The first two digits of the TIN indicate the manufacturer’s plant code, while the remaining digits indicate the tire size and date of manufacture.
+The length of the TIN was standardized to 13 symbols for new tires and 7 symbols for retreaded tires in April 2015.
+<br><br>
+Even though the code is mandated by the US Department of transport, it is used worldwide.
+Therefore the DOT code applies to all tires manufacturered for use on public roads, regardless
+of the market they are sold in. If the DOT code is not imprinted on the sidewall, it does not mean the tire is not authorized to be sold or a counterfeited product.
+It just mean the batch of tire is not sold to the market that requires the DOT by law. 
+<br>
+The list is for reference. Please refer to the U.S. Department of Transport for the latest update on the tyre DOT, especially on the status of the plant.
+						</p>					
+			
+				</div>
+			<br>
+		</div>			
+	</div>
+
+
+	<form method="post" action="/en/dotdecoder.php" onsubmit="return validateForm()">		
+		<span for="id">New Code: (three characters)</span>
+		<input type="text" id="newcode" name="newcode" maxlength="3"><input type="submit" name="new" value="Search NEW DOT">
+	</form>
+
+	<br>	
+	<form method="post" action="/en/dotdecoder.php" onsubmit="return validateForm()">		
+		
+		<span for="id">Old Code: (two characters)</span>
+		<input type="text" id="oldcode" name="oldcode" maxlength="2"><input type="submit" name="old" value="Submit Old DOT">  
+	</form>
+	<form method="post" action="/en/dotdecoder.php" onsubmit="return validateForm()">		
+	
+		<br>	
+		<input type="submit" name="all" value="List All">  
+   </form>
+
+
+		<b>Adjust the screen horizontally to view the list in full</b></div>
+  <div id="txtHint"><b>Last update: 14 Dec 2023</b></div>
+	<br>
+	Page: 
+	<a style='font-size:120%' href='dotdecoder.php?page=1'>1</a> <a style='font-size:120%' href='dotdecoder.php?page=2'>2</a> <a style='font-size:120%' href='dotdecoder.php?page=3'>3</a> <a style='font-size:120%' href='dotdecoder.php?page=4'style='font-size:140%' ><b> >4</b></a> <a style='font-size:120%' href='dotdecoder.php?page=5'>5</a> <a style='font-size:120%' href='dotdecoder.php?page=6'>6</a> <a style='font-size:120%' href='dotdecoder.php?page=7'>7</a> <a style='font-size:120%' href='dotdecoder.php?page=8'>8</a> <a style='font-size:120%' href='dotdecoder.php?page=9'>9</a> <a style='font-size:120%' href='dotdecoder.php?page=10'>10</a> <a style='font-size:120%' href='dotdecoder.php?page=11'>11</a> <a style='font-size:120%' href='dotdecoder.php?page=12'>12</a> 		<div class="table-responsive">
+			<table class="checkout-confirm-table">
+				<tbody>					
+					<tr>
+						<th align="center"><strong>Factory Name</strong></th>
+						<th align="center"><strong>DOT</strong></th>
+						<th align="center"><strong>Old DOT</strong></th>
+						<th align="center"><strong>Address</strong></th>		
+						<th align="center"><strong>COUNTRY</strong></th>		
+						<th align="center"><strong>STATUS</strong></th>		
+					</tr>		
+						<tr>
+						<td>ZHUCHENG YIHESHENG RUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>00A</strong></td>
+						<td align="center"><strong></strong></td>
+						<td>XUJIALUSHUI VILLAGE, XINGXING TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>NINGBO LONGTIME MACHINE CO., LTD.</strong></td>
+						<td align="center"><strong>00H</strong></td>
+						<td align="center"><strong></strong></td>
+						<td>55 PAMJIADIAN, YANSHAN, YINJIANG TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGDAO FUDONG TYRE CO., LTD.</strong></td>
+						<td align="center"><strong>00M</strong></td>
+						<td align="center"><strong></strong></td>
+						<td>5 METERS WEST TO DONGTIE COMMUNITY,CHENGYANG</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGDAO KUNHUA MACHINERY CO., LTD.</strong></td>
+						<td align="center"><strong>00V</strong></td>
+						<td align="center"><strong></strong></td>
+						<td>XIANGGOUTOU, YINZHU TOWN, JIAONAN COUNTY</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>TRISTAR TYRE FACTORY</strong></td>
+						<td align="center"><strong>00P</strong></td>
+						<td align="center"><strong></strong></td>
+						<td>Pale Road,Ywama Industrial Zone, Insein Township</td>
+						<td>MYANMAR (BURMA)</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>NOKIAN TYRE PLC</strong></td>
+						<td align="center"><strong>1YL</strong></td>
+						<td align="center"><strong>YL</strong></td>
+						<td>PIRKKALAISTIE</td>
+						<td>FINLAND</td>
+						<td></td>
+						</tr>												
+						<tr>
+						<td>COOPER TIRE & RUBBER COMPANY</strong></td>
+						<td align="center"><strong>1U9</strong></td>
+						<td align="center"><strong>U9</strong></td>
+						<td>1804 SOUTH GREEN STREET</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BRIDGESTONE AMERICAN TIRE OPERATIONS, LLC/LAVERGNE</strong></td>
+						<td align="center"><strong>1E3</strong></td>
+						<td align="center"><strong>E3</strong></td>
+						<td>1201 BRIDGESTONE PARKWAY</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>INNOVA RUBBER (BENGBU) CO., LTD.</strong></td>
+						<td align="center"><strong>10F</strong></td>
+						<td align="center"><strong>0F</strong></td>
+						<td>WEIWU RD. GUZHENA ECONOMIC DEVELOPMENT ZONE</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DONGYING MONDAY RUBBER TECHNOLOGY CO., LTD.</strong></td>
+						<td align="center"><strong>00L</strong></td>
+						<td align="center"><strong></strong></td>
+						<td>FENGZHUANG VILLAGE, DAWANG TOWN, GUANGRAO</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BRIDGESTONE TIRE MANUFACTURING C.I.S. LLC/RUSSIA</strong></td>
+						<td align="center"><strong>1YD</strong></td>
+						<td align="center"><strong>YD</strong></td>
+						<td>11TH PASSAGEINZHENERNY, BLD. 52</td>
+						<td>RUSSIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>ZHONG CE RUBBER (THAILAND) CO., LTD.</strong></td>
+						<td align="center"><strong>00K</strong></td>
+						<td align="center"><strong></strong></td>
+						<td>NO. 7/666 MOO 6 MABYANG PORN</td>
+						<td>THAILAND</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BRIDGESTONE/AMERICAS TIRE OPERATIONS, LLC AIKEN</strong></td>
+						<td align="center"><strong>17X</strong></td>
+						<td align="center"><strong>7X</strong></td>
+						<td>1 BRIDGESTONE PARKWAY</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>ACE TYRE LTD.</strong></td>
+						<td align="center"><strong>00Y</strong></td>
+						<td align="center"><strong></strong></td>
+						<td>CHERIYAL VILLAGE, SANGAREDDY MANDAL</td>
+						<td>INDIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG OKLOONG RUBBER TECHNOLOGY CO., LTD.</strong></td>
+						<td align="center"><strong>014</strong></td>
+						<td align="center"><strong></strong></td>
+						<td>LONGSHAN HIGH-TECH INDUSTRIAL PARK, LINQU COUNTY</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>JIANGSU SANYUAN TIRE CO., LTD.</strong></td>
+						<td align="center"><strong>013</strong></td>
+						<td align="center"><strong></strong></td>
+						<td>No. 99, Jialingjiang Road, Suqian High-Tech Industrial Development Zone</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>FIDELITY TIRE MANFACTURING CO</strong></td>
+						<td align="center"><strong>1F0</strong></td>
+						<td align="center"><strong>F0</strong></td>
+						<td>KELLEY AVE. AND BRANHAM AVE.</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>GENERAL POPO S.A.</strong></td>
+						<td align="center"><strong>1P5</strong></td>
+						<td align="center"><strong>P5</strong></td>
+						<td>CENTRAL CAMIONERA</td>
+						<td>MEXICO</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>GEO. BYERS SONS, INC.</strong></td>
+						<td align="center"><strong>1U4</strong></td>
+						<td align="center"><strong>U4</strong></td>
+						<td>46 EAST TOWN STREET</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>GOODYEAR TIRE & RUBBER CO.</strong></td>
+						<td align="center"><strong>17L</strong></td>
+						<td align="center"><strong>7L</strong></td>
+						<td></td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>GUIZHOU TYRE FACTORY</strong></td>
+						<td align="center"><strong>10D</strong></td>
+						<td align="center"><strong>0D</strong></td>
+						<td>41, JINGUAN BAIHUA ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>HANKOOK TIRE KUMSAN PLANT</strong></td>
+						<td align="center"><strong>15M</strong></td>
+						<td align="center"><strong>5M</strong></td>
+						<td>JEWON MYUN MYUNGAM-DI 340</td>
+						<td>KOREA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>PT EVOLUZIONE TYRES</strong></td>
+						<td align="center"><strong>1XD</strong></td>
+						<td align="center"><strong>XD</strong></td>
+						<td>RT 17 RW 08</td>
+						<td>INDONESIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>NIHON MICHELIN TIRE CO., LTD.</strong></td>
+						<td align="center"><strong>1ED</strong></td>
+						<td align="center"><strong>ED</strong></td>
+						<td>880 UEKINOCHO</td>
+						<td>JAPAN</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>MICHELIN NORTH AMERICA, INC.</strong></td>
+						<td align="center"><strong>1B9</strong></td>
+						<td align="center"><strong>B9</strong></td>
+						<td>2420 TWO NOTCH RD., PO BOX 579</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG YONJING RUBBER CO., LTD.</strong></td>
+						<td align="center"><strong>1HL</strong></td>
+						<td align="center"><strong>HL</strong></td>
+						<td>CHENGUAN TOWN</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>OKADA TIRE INDUSTRY LTD.</strong></td>
+						<td align="center"><strong>1UW</strong></td>
+						<td align="center"><strong>UW</strong></td>
+						<td></td>
+						<td>JAPAN</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>P.T. SUMI RUBBER INDONESIA</strong></td>
+						<td align="center"><strong>17T</strong></td>
+						<td align="center"><strong>7T</strong></td>
+						<td>4592 7KTM 12045</td>
+						<td>INDONESIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>PIRELLI TYRES LTD.</strong></td>
+						<td align="center"><strong>1XP</strong></td>
+						<td align="center"><strong>XP</strong></td>
+						<td></td>
+						<td>UNITED KINGDOM</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>POZNANSKIE ZAKLADY OPON SAMOCHODOWYCH</strong></td>
+						<td align="center"><strong>1C5</strong></td>
+						<td align="center"><strong>C5</strong></td>
+						<td>UL. STAROLECKA 18</td>
+						<td>POLAND</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>REIFEN-BERG</strong></td>
+						<td align="center"><strong>1H9</strong></td>
+						<td align="center"><strong>H9</strong></td>
+						<td>5000 KOLN 80 (MULHEIM)</td>
+						<td>GERMANY</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>MICHELIN ESPANA PORTUGAL S.A.</strong></td>
+						<td align="center"><strong>1HA</strong></td>
+						<td align="center"><strong>HA</strong></td>
+						<td>AVDA. LUIS MATEOS</td>
+						<td>SPAIN</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SP TYRES UK LTD.</strong></td>
+						<td align="center"><strong>1DD</strong></td>
+						<td align="center"><strong>DD</strong></td>
+						<td>FORT DUNLOP</td>
+						<td>ENGLAND</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>TRIANGLE TIRE CO., LTD.</strong></td>
+						<td align="center"><strong>10H</strong></td>
+						<td align="center"><strong>0H</strong></td>
+						<td>NO. 56 QINGDAO MIDDLE ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>Continental Tyre AS Malaysia Sdn Bhd</strong></td>
+						<td align="center"><strong>1Y6</strong></td>
+						<td align="center"><strong>Y6</strong></td>
+						<td>No. 1, Jalan Tunku Abdul Rahman</td>
+						<td>MALAYSIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SOUTH PACIFIC TYRES</strong></td>
+						<td align="center"><strong>1U0</strong></td>
+						<td align="center"><strong>U0</strong></td>
+						<td>P.O. BOX 22</td>
+						<td>AUSTRAILIA</td>
+						<td>Closed</td>
+						</tr>												
+						<tr>
+						<td>SUMITOMO RUBBER INDUSTRIES, LTD.</strong></td>
+						<td align="center"><strong>1ET</strong></td>
+						<td align="center"><strong>ET</strong></td>
+						<td>1-1, 1-CHOME TSUTSUI-CHO</td>
+						<td>JAPAN</td>
+						<td>Closed</td>
+						</tr>												
+						<tr>
+						<td>ALLIANCE TIRE & RUBBER COMPANY, LTD.</strong></td>
+						<td align="center"><strong>1CD</strong></td>
+						<td align="center"><strong>CD</strong></td>
+						<td></td>
+						<td>ISRAEL</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>B.F. GOODRICH DO BRAZIL</strong></td>
+						<td align="center"><strong>10P</strong></td>
+						<td align="center"><strong>0P</strong></td>
+						<td>CAIXA POSTAL 591</td>
+						<td>BRAZIL</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BOMBAY TYRES INTERNATIONAL LTD.</strong></td>
+						<td align="center"><strong>1Y8</strong></td>
+						<td align="center"><strong>Y8</strong></td>
+						<td>HAV BUNDER ROAD</td>
+						<td>INDIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BRIDGESTONETIRE JAPAN CO., LTD./HIKONE</strong></td>
+						<td align="center"><strong>1EL</strong></td>
+						<td align="center"><strong>EL</strong></td>
+						<td>211 TAKAMIA-CHO</td>
+						<td>JAPAN</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BRIDGESTONE AMERICAS TIRE OPERATION, LLC/WILSON</strong></td>
+						<td align="center"><strong>10B</strong></td>
+						<td align="center"><strong>0B</strong></td>
+						<td>3001 FIRESTONE PARKWAY</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BRIDGESTONE AMERICAS TIRE OPERATIONS, LLC/WARREN</strong></td>
+						<td align="center"><strong>15D</strong></td>
+						<td align="center"><strong>5D</strong></td>
+						<td>725 BRIDGESTONE DR.</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BRIDGESTONE AMERICAS TIRE OPERATIONS, LLC/WARREN</strong></td>
+						<td align="center"><strong>12C</strong></td>
+						<td align="center"><strong>2C</strong></td>
+						<td>725 BRIDGESTONE DR.</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>BRIDGESTONE AMERICAS TIREOPERATIONS, LLC/LAVERGNE</strong></td>
+						<td align="center"><strong>1D2</strong></td>
+						<td align="center"><strong>D2</strong></td>
+						<td>1201 BRIDGESTONE PARKWAY</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>CEAT 10036</strong></td>
+						<td align="center"><strong>1HU</strong></td>
+						<td align="center"><strong>HU</strong></td>
+						<td></td>
+						<td>ITALY</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>Cheng Shin Rubber (Xiamen) Ind. Ltd.</strong></td>
+						<td align="center"><strong>17F</strong></td>
+						<td align="center"><strong>7F</strong></td>
+						<td>No. 15 Xibin Road</td>
+						<td>China</td>
+						<td></td>
+						</tr>												
+						<tr>
+						<td>SOCIEDADE MICHELIN DE PARTICIPACOES, INDUSTRIA E COMERCIO LTDA - UNIDADE CAMPO GRANDE</strong></td>
+						<td align="center"><strong>1B8</strong></td>
+						<td align="center"><strong>B8</strong></td>
+						<td>ESTRADA DA CACHAMORRA 5000</td>
+						<td>BRAZIL</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>CONTINENTAL AG WERK STOECKEN</strong></td>
+						<td align="center"><strong>1CU</strong></td>
+						<td align="center"><strong>CU</strong></td>
+						<td>JAEDEKAMP 30</td>
+						<td>GERMANY</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DA CHUNG HUA RUBBER INDUSTRIAL CO</strong></td>
+						<td align="center"><strong>1J8</strong></td>
+						<td align="center"><strong>J8</strong></td>
+						<td>839 HANYSHAN ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DEUTSCHE GOODYEAR G.M.B.H.</strong></td>
+						<td align="center"><strong>1ND</strong></td>
+						<td align="center"><strong>ND</strong></td>
+						<td>ROTE TORSTSTRASSE 10</td>
+						<td>GERMANY</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DUNLOP INDIA, LTD.</strong></td>
+						<td align="center"><strong>1D5</strong></td>
+						<td align="center"><strong>D5</strong></td>
+						<td></td>
+						<td>INDIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>PIRELLI PNEUS S.A.</strong></td>
+						<td align="center"><strong>1N9</strong></td>
+						<td align="center"><strong>N9</strong></td>
+						<td>BR 324 - KM 105 - CIS</td>
+						<td>BRAZIL</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>GOODYEAR FRANCE S.A.</strong></td>
+						<td align="center"><strong>1NC</strong></td>
+						<td align="center"><strong>NC</strong></td>
+						<td></td>
+						<td>FRANCE</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>Goodyear do Brasil Produtos de Borracha Ltda.</strong></td>
+						<td align="center"><strong>1Y1</strong></td>
+						<td align="center"><strong>Y1</strong></td>
+						<td>Avenida Alfonso Pansan, 3.415 (Rod. Anhanguera Km 128)</td>
+						<td>BRAZIL</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>COMPANHIA GOODYEAR DO BRAZIL</strong></td>
+						<td align="center"><strong>1MX</strong></td>
+						<td align="center"><strong>MX</strong></td>
+						<td>RUE DOS PRAZERES 284</td>
+						<td>BRAZIL</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>CONTINENTAL TIRE ANDINA S.A.</strong></td>
+						<td align="center"><strong>11H</strong></td>
+						<td align="center"><strong>1H</strong></td>
+						<td>P.O. BOX 1594</td>
+						<td>ECUADOR</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>COMPANIA GOODYEAR DEL PERU</strong></td>
+						<td align="center"><strong>1NT</strong></td>
+						<td align="center"><strong>NT</strong></td>
+						<td></td>
+						<td>PERU</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>I-GREATEST RUBBER IND. CO., LTD.</strong></td>
+						<td align="center"><strong>1NP</strong></td>
+						<td align="center"><strong>NP</strong></td>
+						<td>NO. 36 TYAN-CHUNG RD. DAH TUANG VILLAGE</td>
+						<td>TAIWAN</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>CONTINENTAL AG  WERK KORBACH</strong></td>
+						<td align="center"><strong>1CP</strong></td>
+						<td align="center"><strong>CP</strong></td>
+						<td>CONTINENTAL STRASSE  3 - 5</td>
+						<td>GERMANY</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>TOYO TYRE MALAYSIA SDN BHD</strong></td>
+						<td align="center"><strong>1CM</strong></td>
+						<td align="center"><strong>CM</strong></td>
+						<td>PT 23101 JALAN TEMBAGAN KUNING, KAWASAN</td>
+						<td>MALAYSIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>PETROSHINA JOINT-STOCK COMPANY</strong></td>
+						<td align="center"><strong>13D</strong></td>
+						<td align="center"><strong>3D</strong></td>
+						<td>STARO-PETERHOFSKY, 20</td>
+						<td>RUSSIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>COOPER TIRE & RUBBER COMPANY</strong></td>
+						<td align="center"><strong>1UP</strong></td>
+						<td align="center"><strong>UP</strong></td>
+						<td>701 LIMA AVENUE</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>CORPORATION FIANCIARA DEL VALLE S.A.</strong></td>
+						<td align="center"><strong>1BL</strong></td>
+						<td align="center"><strong>BL</strong></td>
+						<td>CALLE 10 NO. 4-47</td>
+						<td>COLOMBIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>MICHELIN ESPANA PORTUGAL S.A.</strong></td>
+						<td align="center"><strong>1H1</strong></td>
+						<td align="center"><strong>H1</strong></td>
+						<td>AVENIDA DE BURGOS</td>
+						<td>SPAIN</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DEBICKIE ZATTLDY OPON SAMOCHODOWYCH</strong></td>
+						<td align="center"><strong>1T3</strong></td>
+						<td align="center"><strong>T3</strong></td>
+						<td></td>
+						<td>POLAND</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DEERUBBER CO., LTD</strong></td>
+						<td align="center"><strong>15H</strong></td>
+						<td align="center"><strong>5H</strong></td>
+						<td>84/3 PETCHKASEM ROAD</td>
+						<td>THAILAND</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DEESTONE INTERNATIONAL CO., LTD.</strong></td>
+						<td align="center"><strong>18M</strong></td>
+						<td align="center"><strong>8M</strong></td>
+						<td>NO.4, MOO7, BANGPLA, BANGLANE</td>
+						<td>THAILAND</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DEESTONE LTD.</strong></td>
+						<td align="center"><strong>12B</strong></td>
+						<td align="center"><strong>2B</strong></td>
+						<td>84 PETCHKASEM ROAD</td>
+						<td>THAILAND</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DENMAN TIRE CORPORATION</strong></td>
+						<td align="center"><strong>1DY</strong></td>
+						<td align="center"><strong>DY</strong></td>
+						<td>DIEHL SOUTH ROAD</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DEWAN TYRES LTD.</strong></td>
+						<td align="center"><strong>12H</strong></td>
+						<td align="center"><strong>2H</strong></td>
+						<td>MEERUT BYE-PASS ROAD</td>
+						<td>INDIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>THE CARLSTAR GROUP LLC</strong></td>
+						<td align="center"><strong>1C4</strong></td>
+						<td align="center"><strong>C4</strong></td>
+						<td>520 JD YARNELL INDUSTRIAL PKWY</td>
+						<td>UNITED STATES (USA)</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DOUBLESTAR DONGFENG TYRE CO., LTD.</strong></td>
+						<td align="center"><strong>11K</strong></td>
+						<td align="center"><strong>1K</strong></td>
+						<td>No.66, Xicheng Avenue, Industrial New District, Zhangwan District,</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DOUBLE HAPPINESS TYRE IND. CORP., LTD.</strong></td>
+						<td align="center"><strong>16E</strong></td>
+						<td align="center"><strong>6E</strong></td>
+						<td>NO.3 SOUTH QINXIAN ST., SOUTH  JIANSHE RD.</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DUNLOP FRANCE S.A.</strong></td>
+						<td align="center"><strong>1DK</strong></td>
+						<td align="center"><strong>DK</strong></td>
+						<td>RUE DE PASQUIS BP539</td>
+						<td>FRANCE</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DUNLOP FRANCE S.A.</strong></td>
+						<td align="center"><strong>1DL</strong></td>
+						<td align="center"><strong>DL</strong></td>
+						<td>RUE ROGER DUMOULIN BP1337</td>
+						<td>FRANCE</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DUNLOP INDIA, LTD.</strong></td>
+						<td align="center"><strong>1D4</strong></td>
+						<td align="center"><strong>D4</strong></td>
+						<td>P.O. SAHAGANJ-DISTRICK HOOGHLY</td>
+						<td>INDIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>CONTINENTAL SIME TYRE PJ SDN BERHAD</strong></td>
+						<td align="center"><strong>1B2</strong></td>
+						<td align="center"><strong>B2</strong></td>
+						<td>PETALING JAYA</td>
+						<td>MALAYSIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DUNLOP NEW ZEALAND, LTD.</strong></td>
+						<td align="center"><strong>1F9</strong></td>
+						<td align="center"><strong>F9</strong></td>
+						<td>P.O. BOX 40343</td>
+						<td>NEW ZEALAND</td>
+						<td>Closed</td>
+						</tr>												
+						<tr>
+						<td>DUNLOP OLYMPIC TYRES</strong></td>
+						<td align="center"><strong>1W4</strong></td>
+						<td align="center"><strong>W4</strong></td>
+						<td></td>
+						<td>AUSTRAILIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DUNLOP OLYMPIC TYRES</strong></td>
+						<td align="center"><strong>1WM</strong></td>
+						<td align="center"><strong>WM</strong></td>
+						<td>P.O. BOX 1</td>
+						<td>AUSTRAILIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SUMITOMO RUBBER SOUTH AFRICA</strong></td>
+						<td align="center"><strong>1D7</strong></td>
+						<td align="center"><strong>D7</strong></td>
+						<td>LADYSMITH PLANT, 151 HELPMEKAAR RD.</td>
+						<td>SOUTH AFRICA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>Apollo Tyres South Africa (PTY) Ltd.- Durban</strong></td>
+						<td align="center"><strong>1D8</strong></td>
+						<td align="center"><strong>D8</strong></td>
+						<td>Dunlop House</td>
+						<td>South Africa</td>
+						<td></td>
+						</tr>												
+						<tr>
+						<td>SUMITOMO RUBBER USA</strong></td>
+						<td align="center"><strong>1DA</strong></td>
+						<td align="center"><strong>DA</strong></td>
+						<td>P.O. BOX 1109</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>EUZKADI COMPANIA HULERA EUZKADI, S.A.</strong></td>
+						<td align="center"><strong>1WW</strong></td>
+						<td align="center"><strong>WW</strong></td>
+						<td>LAGO ALBERTO NO. 366, APARTADO</td>
+						<td>MEXICO</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>EUZKADI COMPANIA HULERA EUZKADI, S.A.</strong></td>
+						<td align="center"><strong>1WX</strong></td>
+						<td align="center"><strong>WX</strong></td>
+						<td></td>
+						<td>MEXICO</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>Cheng Shin Tire (Xiamen) Co., Ltd.</strong></td>
+						<td align="center"><strong>114</strong></td>
+						<td align="center"><strong>14</strong></td>
+						<td>No. 15 Xiyuan Road Haicang District</td>
+						<td>China</td>
+						<td></td>
+						</tr>												
+						<tr>
+						<td>SHANDONG JINYU TIRE CO., LTD.</strong></td>
+						<td align="center"><strong>115</strong></td>
+						<td align="center"><strong>15</strong></td>
+						<td>NO.260, Qingken Road, Dawang Town,Guangrao County, Dongying City, Shandong, China</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>GOODTIME RUBBER CO, LTD.</strong></td>
+						<td align="center"><strong>116</strong></td>
+						<td align="center"><strong>16</strong></td>
+						<td>KM32 NATIONAL RD. 22</td>
+						<td>VIETNAM</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DA TSEN TYRE FACTORY</strong></td>
+						<td align="center"><strong>117</strong></td>
+						<td align="center"><strong>17</strong></td>
+						<td>1441 HU MING ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>DONG HAI RUBBER FACTORY</strong></td>
+						<td align="center"><strong>118</strong></td>
+						<td align="center"><strong>18</strong></td>
+						<td>RTE. 33, NAN HUI</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>QINGDAO TIANGCHI TIRES CO., LTD.</strong></td>
+						<td align="center"><strong>119</strong></td>
+						<td align="center"><strong>19</strong></td>
+						<td>XINAN VILLEGE, PINGDU</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>CHAOYANG LONG MARCH TYRE CO., LTD</strong></td>
+						<td align="center"><strong>11R</strong></td>
+						<td align="center"><strong>1R</strong></td>
+						<td>NO.1 XIANGYANG RD.</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>MAXXIS INTERNATIONAL (THAILAND) CO. LTD.</strong></td>
+						<td align="center"><strong>120</strong></td>
+						<td align="center"><strong>20</strong></td>
+						<td>300/1 Moo 1 Tambol Tasith</td>
+						<td>Thailand</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>ADKINS TIRE SERVICE</strong></td>
+						<td align="center"><strong>121</strong></td>
+						<td align="center"><strong>21</strong></td>
+						<td>104 SMITH STREET</td>
+						<td>UNITED STATES</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SUMITOMO RUBBER (CHANGSHU) CO., LTD.</strong></td>
+						<td align="center"><strong>10T</strong></td>
+						<td align="center"><strong>0T</strong></td>
+						<td>CHANGSHU ECONOMIC DEVELOPMENT ZONE</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>LLC MICHELIN RUSSIAN TYRE MANUFACTURING CO.</strong></td>
+						<td align="center"><strong>122</strong></td>
+						<td align="center"><strong>22</strong></td>
+						<td>1 ZAVODSKAYA STREET</td>
+						<td>RUSSIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>GITI TIRE (CHONGQING) COMPANY, LTD.</strong></td>
+						<td align="center"><strong>123</strong></td>
+						<td align="center"><strong>23</strong></td>
+						<td>TECHNOLOGY FUHUA BUILDING, NO.16 TORCH RD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>JSC NIZHNEKAMSKSHINA</strong></td>
+						<td align="center"><strong>124</strong></td>
+						<td align="center"><strong>24</strong></td>
+						<td></td>
+						<td>RUSSIA</td>
+						<td>Active</td>
+						</tr>												
+						<tr>
+						<td>SHANDONG YONGTAI GROUP CO., LTD.</strong></td>
+						<td align="center"><strong>125</strong></td>
+						<td align="center"><strong>25</strong></td>
+						<td>262 QINGKEN ROAD</td>
+						<td>CHINA</td>
+						<td>Active</td>
+						</tr>												
+	
+				</tbody>
+			</table>
+		</div>
+				<div class="h20"></div>
+			
+<footer>
+	<div id = "f">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-4 col-sm-4 col-md-4">
+					<p><a href="car-battery.php">Autmotive Battery</a></p>
+					<p><a href="autoparts.php">Automobile Parts</a></p>			
+					<br>
+					<p><a href="tirebrands.php">List of tyre brands</a></p>	
+					<p><a href="batterybrands.php">List of Battery Brands</a></p>
+					<br>					
+					<p><a href="tyremarking.php">Tyre marking glossary</a></p>
+					<p><a href="glossary.php">Glossary</a></p>
+					<br>					
+					<p><a href="data.php">Consumption Data Research</a></p>								
+					<p><a href="3dprinting.php">3D Printing Case Studies</a></p>			
+				</div>
+				<div class="col-lg-4 col-sm-4 col-md-4">
+					<p><a href="aboutus.php">About us</a></p>
+					<br>			
+					<p><a href="faq.php">Frequently Asked Questions</a></p>
+					<p><a href="terms.html">Terms of use</a></p>					
+					<p><a href="articles.php">News and Articles</a></p>	
+					<br>
+					<p><a href="weather.html">Inclement weather arrangement</a></p>	
+					<p><a href="">Store Closing/Opening Special Arrangement</a></p>		
+					<br>					
+					<p><a href="#sectionContactInfo">Advertisement Enquiry</a></p>
+					<br>
+					<p><a href="">Tyrehood Zone Customer Access</a></p>
+					<p><a href="">DIY Vehicle Management List</a></p>
+				</div>
+				<div class="col-lg-4 col-sm-4 col-md-4">
+					<a href='https://play.google.com/store/apps/details?id=com.tyrehood.tyrehoodzone&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img style="width:90%" alt='立即下載 Google Play' src='//www.tyrehood.com/assets/img/google-play-badge-en.png'/></a>
+					<a href='https://apps.apple.com/app/id1476499495'><img src="//www.tyrehood.com/assets/img/iosBadgeEn.svg" style="margin: 5%; width:80%" alt="ios app Tyrehood Zone"></a>				
+					<p>Payment Method</p>
+					<img src="//www.tyrehood.com/assets/img/fps.png" alt="fps"> &nbsp &nbsp &nbsp
+					<img src="//www.tyrehood.com/assets/img/atm.png" alt="atm"> &nbsp &nbsp &nbsp
+					<img src="//www.tyrehood.com/assets/img/cash.png" alt="cash">
+				</div>
+			</div>
+		</div>
+		<br>
+		<div class="brand"> 						
+			All rights reserved 	&copy; - 2016-2025 Tyrehood 呔酷膠輪電池公司	 &ensp; &ensp;				
+		</div>
+		<br>
+		<br>
+	</div>		
+</footer>
+
+    <script src="//www.tyrehood.com/assets/js/bootstrap.js" type="text/javascript"></script>	
+	
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/58c236d25b8fe5150eeef5bb/default';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->	
+  </body>
+</html>
