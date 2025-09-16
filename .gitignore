@@ -191,6 +191,12 @@ sample_image/
 # Documentation
 doc/
 
+# Credentials and secrets
+*.json
+!data/plant_codes.json
+!package.json
+!tsconfig.json
+
 # PyCharm
 #  JetBrains specific template is maintainted in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
