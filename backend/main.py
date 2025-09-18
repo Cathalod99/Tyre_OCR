@@ -90,23 +90,21 @@ async def startup_event():
     
     try:
         # Check ONNX Runtime availability first
-        try:
-            import onnxruntime
-            logger.info(f"ONNX Runtime version: {onnxruntime.__version__}")
-            logger.info("Loading YOLO model...")
-            yolov11 = YOLOv11(MODEL_PATH, conf_thres=0.2, iou_thres=0.3)
-            logger.info("YOLO model loaded successfully")
-        except ImportError as e:
-            logger.warning(f"ONNX Runtime not available: {e}")
-            logger.warning("YOLO model will use fallback detection")
-            # Initialize YOLO with fallback mode
-            yolov11 = YOLOv11(MODEL_PATH, conf_thres=0.2, iou_thres=0.3)
-            logger.info("YOLO model initialized in fallback mode")
+        import onnxruntime
+        logger.info(f"ONNX Runtime version: {onnxruntime.__version__}")
+        logger.info(f"Available providers: {onnxruntime.get_available_providers()}")
+        
+        logger.info("Loading YOLO model...")
+        yolov11 = YOLOv11(MODEL_PATH, conf_thres=0.2, iou_thres=0.3)
+        logger.info("YOLO model loaded successfully")
+    except ImportError as e:
+        logger.error(f"ONNX Runtime not available: {e}")
+        logger.error("ONNX Runtime is required for proper tire detection")
+        logger.error("Please check Docker build logs for installation issues")
+        raise e
     except Exception as e:
         logger.error(f"Failed to load YOLO model: {e}")
-        logger.warning("Application will start with limited functionality")
-        # Don't raise the exception, just log it and continue
-        yolov11 = None
+        raise e
 
 @app.get("/health")
 async def health_check():
@@ -185,14 +183,10 @@ async def analyze_tire(image: UploadFile = File(...)):
         logger.info(f"Processing image: {image.filename}")
         
         # YOLO tire detection
-        if yolov11:
-            ocr_crops, boxes, scores, class_ids = yolov11(img)
-        else:
-            logger.warning("YOLO model not available, using fallback detection")
-            # Use fallback detection - assume entire image is a tire
-            height, width = img.shape[:2]
-            ocr_crops = [(0, 0, width, height)]
-            boxes, scores, class_ids = [], [], []
+        if not yolov11:
+            raise HTTPException(status_code=500, detail="YOLO model not loaded - ONNX Runtime required")
+        
+        ocr_crops, boxes, scores, class_ids = yolov11(img)
         
         if not ocr_crops:
             return JSONResponse(

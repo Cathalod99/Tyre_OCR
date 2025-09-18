@@ -13,6 +13,9 @@ RUN apt-get update && apt-get install -y \
     libgomp1 \
     libgcc-s1 \
     libstdc++6 \
+    libgfortran5 \
+    libopenblas0 \
+    liblapack3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -21,11 +24,11 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Try to install ONNX Runtime separately (optional)
-RUN pip install --no-cache-dir "onnxruntime>=1.12.0" || echo "ONNX Runtime installation failed, will use fallback mode"
+# Force install ONNX Runtime with specific version
+RUN pip install --no-cache-dir --force-reinstall onnxruntime==1.19.2
 
-# Verify ONNX Runtime installation (optional)
-RUN python -c "import onnxruntime; print('ONNX Runtime version:', onnxruntime.__version__)" || echo "ONNX Runtime not available"
+# Verify ONNX Runtime installation
+RUN python -c "import onnxruntime; print('ONNX Runtime version:', onnxruntime.__version__); print('Available providers:', onnxruntime.get_available_providers())"
 
 # Copy application code
 COPY . .
@@ -36,6 +39,9 @@ COPY ocrtyre-9369d891cdc1.json /app/ocrtyre-9369d891cdc1.json
 # Create models directory and copy YOLO model
 RUN mkdir -p models
 COPY models/Tyre_Detect.onnx /app/models/Tyre_Detect.onnx
+
+# Test YOLO model loading
+RUN python -c "import onnxruntime; session = onnxruntime.InferenceSession('/app/models/Tyre_Detect.onnx'); print('YOLO model loaded successfully')"
 
 # Expose port
 EXPOSE 8000
