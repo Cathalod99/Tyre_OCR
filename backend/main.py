@@ -124,11 +124,21 @@ async def analyze_tire(image: UploadFile = File(...)):
             
             # Enhance & OCR
             logger.info("Enhancing tire image for better OCR...")
-            warpPolar(str(crop_path))
-            enhanced = temp_dir / "tire_crop_convert.jpg"
+            logger.info(f"Crop image saved to: {crop_path}")
+            logger.info(f"Crop image size: {crop_path.stat().st_size} bytes")
             
-            if not enhanced.exists():
-                raise HTTPException(status_code=500, detail="Image enhancement failed")
+            try:
+                warpPolar(str(crop_path))
+                enhanced = temp_dir / "tire_crop_convert.jpg"
+                logger.info(f"Image enhancement completed. Enhanced image: {enhanced}")
+                
+                if not enhanced.exists():
+                    raise HTTPException(status_code=500, detail="Image enhancement failed - enhanced image not created")
+                    
+                logger.info(f"Enhanced image size: {enhanced.stat().st_size} bytes")
+            except Exception as enhance_error:
+                logger.error(f"Image enhancement failed: {str(enhance_error)}")
+                raise HTTPException(status_code=500, detail=f"Image enhancement failed: {str(enhance_error)}")
             
             # OCR text extraction
             logger.info(f"Running OCR on enhanced image: {enhanced}")
@@ -139,6 +149,12 @@ async def analyze_tire(image: UploadFile = File(...)):
             gcp_creds = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
             logger.info(f"Google Cloud credentials path: {gcp_creds}")
             logger.info(f"Credentials file exists: {os.path.exists(gcp_creds) if gcp_creds else 'N/A'}")
+            
+            # Check if enhanced image was created successfully
+            logger.info(f"Enhanced image path: {enhanced}")
+            logger.info(f"Enhanced image exists: {enhanced.exists()}")
+            if enhanced.exists():
+                logger.info(f"Enhanced image size: {enhanced.stat().st_size} bytes")
             
             try:
                 ocr_text = detect_text(str(enhanced))
