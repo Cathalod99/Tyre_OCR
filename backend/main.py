@@ -89,6 +89,14 @@ async def startup_event():
             logger.error(f"Failed to set up Google Cloud credentials from environment: {e}")
     
     try:
+        # Check ONNX Runtime availability first
+        try:
+            import onnxruntime
+            logger.info(f"ONNX Runtime version: {onnxruntime.__version__}")
+        except ImportError as e:
+            logger.error(f"ONNX Runtime not available: {e}")
+            raise e
+            
         logger.info("Loading YOLO model...")
         yolov11 = YOLOv11(MODEL_PATH, conf_thres=0.2, iou_thres=0.3)
         logger.info("YOLO model loaded successfully")
@@ -157,6 +165,12 @@ async def analyze_tire(image: UploadFile = File(...)):
         logger.info(f"Image data type: {img.dtype}")
         logger.info(f"Image size: {len(image_data)} bytes")
         
+        # Preserve image quality - ensure we're working with high quality
+        if img.shape[0] < 1000 or img.shape[1] < 1000:
+            logger.warning(f"Image resolution is low: {img.shape[0]}x{img.shape[1]}")
+        else:
+            logger.info(f"Image resolution is good: {img.shape[0]}x{img.shape[1]}")
+        
         logger.info(f"Processing image: {image.filename}")
         
         # YOLO tire detection
@@ -179,8 +193,8 @@ async def analyze_tire(image: UploadFile = File(...)):
             crop_path = temp_dir / "tire_crop.jpg"
             enhanced_path = temp_dir / "tire_enhanced.jpg"
             
-            # Save crop
-            cv2.imwrite(str(crop_path), crop)
+            # Save crop with high quality
+            cv2.imwrite(str(crop_path), crop, [cv2.IMWRITE_JPEG_QUALITY, 95])
             
             # Enhance & OCR
             logger.info("Enhancing tire image for better OCR...")

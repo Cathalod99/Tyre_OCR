@@ -19,6 +19,9 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Verify ONNX Runtime installation
+RUN python -c "import onnxruntime; print('ONNX Runtime version:', onnxruntime.__version__)"
+
 # Copy application code
 COPY . .
 
