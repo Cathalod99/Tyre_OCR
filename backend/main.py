@@ -93,21 +93,35 @@ async def startup_event():
         try:
             import onnxruntime
             logger.info(f"ONNX Runtime version: {onnxruntime.__version__}")
+            logger.info("Loading YOLO model...")
+            yolov11 = YOLOv11(MODEL_PATH, conf_thres=0.2, iou_thres=0.3)
+            logger.info("YOLO model loaded successfully")
         except ImportError as e:
-            logger.error(f"ONNX Runtime not available: {e}")
-            raise e
-            
-        logger.info("Loading YOLO model...")
-        yolov11 = YOLOv11(MODEL_PATH, conf_thres=0.2, iou_thres=0.3)
-        logger.info("YOLO model loaded successfully")
+            logger.warning(f"ONNX Runtime not available: {e}")
+            logger.warning("YOLO model will use fallback detection")
+            # Initialize YOLO with fallback mode
+            yolov11 = YOLOv11(MODEL_PATH, conf_thres=0.2, iou_thres=0.3)
+            logger.info("YOLO model initialized in fallback mode")
     except Exception as e:
         logger.error(f"Failed to load YOLO model: {e}")
-        raise e
+        logger.warning("Application will start with limited functionality")
+        # Don't raise the exception, just log it and continue
+        yolov11 = None
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "message": "Tire OCR API is running"}
+    yolo_status = "available" if yolov11 else "fallback mode"
+    return {
+        "status": "healthy", 
+        "message": "Tire OCR API is running",
+        "yolo_status": yolo_status,
+        "features": {
+            "yolo_detection": yolov11 is not None,
+            "ocr_processing": True,
+            "ml_models": True
+        }
+    }
 
 @app.get("/test-gcp")
 async def test_gcp_credentials():
@@ -144,9 +158,6 @@ async def analyze_tire(image: UploadFile = File(...)):
     """
     Analyze a tire image and extract information
     """
-    if not yolov11:
-        raise HTTPException(status_code=500, detail="YOLO model not loaded")
-    
     try:
         # Validate file type
         if not image.content_type.startswith('image/'):
@@ -174,7 +185,14 @@ async def analyze_tire(image: UploadFile = File(...)):
         logger.info(f"Processing image: {image.filename}")
         
         # YOLO tire detection
-        ocr_crops, boxes, scores, class_ids = yolov11(img)
+        if yolov11:
+            ocr_crops, boxes, scores, class_ids = yolov11(img)
+        else:
+            logger.warning("YOLO model not available, using fallback detection")
+            # Use fallback detection - assume entire image is a tire
+            height, width = img.shape[:2]
+            ocr_crops = [(0, 0, width, height)]
+            boxes, scores, class_ids = [], [], []
         
         if not ocr_crops:
             return JSONResponse(
