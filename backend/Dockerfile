@@ -24,6 +24,7 @@ COPY . .
 
 # Copy Google Cloud credentials
 COPY ocrtyre.json /app/ocrtyre.json
+COPY ocrtyre-9369d891cdc1.json /app/ocrtyre-9369d891cdc1.json
 
 # Create models directory and copy YOLO model
 RUN mkdir -p models
@@ -34,7 +35,7 @@ EXPOSE 8000
 
 # Set environment variables
 ENV PYTHONPATH=/app
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/ocrtyre.json
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/ocrtyre-9369d891cdc1.json
 
 # Run the application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

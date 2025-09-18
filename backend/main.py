@@ -15,6 +15,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from Yolo.YOLO import YOLOv11
 from OCR.vision import detect_text
+import pytesseract
 from convert import warpPolar
 from ML.text_processor import build_result
 from plant_codes import PLANT_MAP
@@ -37,6 +38,19 @@ app.add_middleware(
 # Global variables for models
 yolov11 = None
 MODEL_PATH = "../models/Tyre_Detect.onnx"
+
+def fallback_ocr(image_path: str) -> str:
+    """Fallback OCR using pytesseract if Google Cloud Vision fails"""
+    try:
+        import pytesseract
+        from PIL import Image
+        image = Image.open(image_path)
+        text = pytesseract.image_to_string(image, config='--psm 6')
+        logger.info(f"Fallback OCR result: {text[:200]}")
+        return text.strip() if text.strip() else None
+    except Exception as e:
+        logger.error(f"Fallback OCR also failed: {e}")
+        return None
 
 def lookup_plant_info(plant_code: str) -> dict:
     """
@@ -128,16 +142,26 @@ async def analyze_tire(image: UploadFile = File(...)):
             
             # OCR text extraction
             logger.info(f"Running OCR on enhanced image: {enhanced}")
+            logger.info(f"Enhanced image exists: {enhanced.exists()}")
+            logger.info(f"Enhanced image size: {enhanced.stat().st_size if enhanced.exists() else 'N/A'} bytes")
+            
+            # Check Google Cloud credentials
+            gcp_creds = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+            logger.info(f"Google Cloud credentials path: {gcp_creds}")
+            logger.info(f"Credentials file exists: {os.path.exists(gcp_creds) if gcp_creds else 'N/A'}")
+            
             try:
                 ocr_text = detect_text(str(enhanced))
-                logger.info(f"OCR result: {ocr_text}")
+                logger.info(f"OCR result length: {len(ocr_text) if ocr_text else 0}")
+                logger.info(f"OCR result preview: {ocr_text[:200] if ocr_text else 'None'}")
                 if not ocr_text:
                     return JSONResponse(
                         status_code=400,
                         content={"error": "No text detected in the tire image. Please try a clearer image with better lighting and contrast."}
                     )
             except Exception as ocr_error:
-                logger.error(f"OCR failed: {str(ocr_error)}")
+                logger.error(f"OCR failed with error: {str(ocr_error)}")
+                logger.error(f"OCR error type: {type(ocr_error)}")
                 return JSONResponse(
                     status_code=500,
                     content={"error": f"OCR processing failed: {str(ocr_error)}"}
