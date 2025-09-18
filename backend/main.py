@@ -76,6 +76,36 @@ async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "message": "Tire OCR API is running"}
 
+@app.get("/test-gcp")
+async def test_gcp_credentials():
+    """Test Google Cloud Vision API credentials"""
+    try:
+        gcp_creds = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+        logger.info(f"Testing GCP credentials: {gcp_creds}")
+        
+        if not gcp_creds:
+            return {"error": "GOOGLE_APPLICATION_CREDENTIALS not set"}
+        
+        if not os.path.exists(gcp_creds):
+            return {"error": f"Credentials file not found: {gcp_creds}"}
+        
+        # Test with a simple image
+        test_image_path = "sample_image/20240516_130139.jpg"
+        if os.path.exists(test_image_path):
+            ocr_text = detect_text(test_image_path)
+            return {
+                "status": "success",
+                "credentials_file": gcp_creds,
+                "credentials_exists": os.path.exists(gcp_creds),
+                "test_ocr_result": ocr_text[:200] if ocr_text else "No text detected"
+            }
+        else:
+            return {"error": "Test image not found"}
+            
+    except Exception as e:
+        logger.error(f"GCP test failed: {str(e)}")
+        return {"error": f"GCP test failed: {str(e)}"}
+
 @app.post("/analyze-tire")
 async def analyze_tire(image: UploadFile = File(...)):
     """
