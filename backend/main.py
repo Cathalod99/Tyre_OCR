@@ -15,7 +15,15 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from Yolo.YOLO import YOLOv11
 from OCR.vision import detect_text
-import pytesseract
+
+# Try to import pytesseract, but don't fail if it's not available
+try:
+    import pytesseract
+    PYTESSERACT_AVAILABLE = True
+except ImportError:
+    print("Warning: pytesseract not available. Fallback OCR will be disabled.")
+    pytesseract = None
+    PYTESSERACT_AVAILABLE = False
 from convert import warpPolar
 from ML.text_processor import build_result
 from plant_codes import PLANT_MAP
@@ -41,8 +49,11 @@ MODEL_PATH = "../models/Tyre_Detect.onnx"
 
 def fallback_ocr(image_path: str) -> str:
     """Fallback OCR using pytesseract if Google Cloud Vision fails"""
+    if not PYTESSERACT_AVAILABLE:
+        logger.warning("Fallback OCR not available - pytesseract not installed")
+        return None
+    
     try:
-        import pytesseract
         from PIL import Image
         image = Image.open(image_path)
         text = pytesseract.image_to_string(image, config='--psm 6')
