@@ -23,7 +23,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Copy Google Cloud credentials
-COPY ocrtyre.json /app/ocrtyre.json
 COPY ocrtyre-9369d891cdc1.json /app/ocrtyre-9369d891cdc1.json
 
 # Create models directory and copy YOLO model
