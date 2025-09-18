@@ -12,4 +12,4 @@
 [build.environment]
   NODE_VERSION = "18"
   # Add your backend API URL here
-  REACT_APP_API_URL = "https://your-backend.railway.app"
+  REACT_APP_API_URL = "https://tyreocr-production.up.railway.app"
