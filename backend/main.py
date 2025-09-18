@@ -63,6 +63,31 @@ def lookup_plant_info(plant_code: str) -> dict:
 async def startup_event():
     """Initialize models on startup"""
     global yolov11
+    
+    # Set up Google Cloud credentials from environment variable if available
+    gcp_creds_base64 = os.getenv('GOOGLE_CLOUD_CREDENTIALS_BASE64')
+    if gcp_creds_base64:
+        try:
+            import base64
+            import json
+            import tempfile
+            
+            # Decode and write credentials to temp file
+            creds_json = base64.b64decode(gcp_creds_base64).decode('utf-8')
+            creds_data = json.loads(creds_json)
+            
+            # Create temp file for credentials
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                json.dump(creds_data, f)
+                temp_creds_path = f.name
+            
+            # Set environment variable to point to temp file
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = temp_creds_path
+            logger.info(f"Google Cloud credentials set from environment variable: {temp_creds_path}")
+            
+        except Exception as e:
+            logger.error(f"Failed to set up Google Cloud credentials from environment: {e}")
+    
     try:
         logger.info("Loading YOLO model...")
         yolov11 = YOLOv11(MODEL_PATH, conf_thres=0.2, iou_thres=0.3)
