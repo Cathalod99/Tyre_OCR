@@ -16,14 +16,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 from Yolo.YOLO import YOLOv11
 from OCR.vision import detect_text
 
-# Try to import pytesseract, but don't fail if it's not available
-try:
-    import pytesseract
-    PYTESSERACT_AVAILABLE = True
-except ImportError:
-    print("Warning: pytesseract not available. Fallback OCR will be disabled.")
-    pytesseract = None
-    PYTESSERACT_AVAILABLE = False
+# Using Google Cloud Vision API only - no pytesseract needed
 from convert import warpPolar
 from ML.text_processor import build_result
 from plant_codes import PLANT_MAP
@@ -47,21 +40,7 @@ app.add_middleware(
 yolov11 = None
 MODEL_PATH = "../models/Tyre_Detect.onnx"
 
-def fallback_ocr(image_path: str) -> str:
-    """Fallback OCR using pytesseract if Google Cloud Vision fails"""
-    if not PYTESSERACT_AVAILABLE:
-        logger.warning("Fallback OCR not available - pytesseract not installed")
-        return None
-    
-    try:
-        from PIL import Image
-        image = Image.open(image_path)
-        text = pytesseract.image_to_string(image, config='--psm 6')
-        logger.info(f"Fallback OCR result: {text[:200]}")
-        return text.strip() if text.strip() else None
-    except Exception as e:
-        logger.error(f"Fallback OCR also failed: {e}")
-        return None
+# Removed fallback OCR - using Google Cloud Vision API only
 
 def lookup_plant_info(plant_code: str) -> dict:
     """
@@ -166,32 +145,16 @@ async def analyze_tire(image: UploadFile = File(...)):
                 logger.info(f"OCR result length: {len(ocr_text) if ocr_text else 0}")
                 logger.info(f"OCR result preview: {ocr_text[:200] if ocr_text else 'None'}")
                 if not ocr_text:
-                    # Try fallback OCR if Google Cloud Vision fails
-                    logger.info("Google Cloud Vision failed, trying fallback OCR...")
-                    ocr_text = fallback_ocr(str(enhanced))
-                    if not ocr_text:
-                        return JSONResponse(
-                            status_code=400,
-                            content={"error": "No text detected in the tire image. Please try a clearer image with better lighting and contrast."}
-                        )
-            except Exception as ocr_error:
-                logger.error(f"OCR failed with error: {str(ocr_error)}")
-                logger.error(f"OCR error type: {type(ocr_error)}")
-                # Try fallback OCR
-                logger.info("Trying fallback OCR after error...")
-                try:
-                    ocr_text = fallback_ocr(str(enhanced))
-                    if not ocr_text:
-                        return JSONResponse(
-                            status_code=500,
-                            content={"error": f"OCR processing failed: {str(ocr_error)}"}
-                        )
-                except Exception as fallback_error:
-                    logger.error(f"Fallback OCR also failed: {str(fallback_error)}")
                     return JSONResponse(
-                        status_code=500,
-                        content={"error": f"OCR processing failed: {str(ocr_error)}"}
+                        status_code=400,
+                        content={"error": "No text detected in the tire image. Please try a clearer image with better lighting and contrast."}
                     )
+            except Exception as ocr_error:
+                logger.error(f"Google Cloud Vision OCR failed: {str(ocr_error)}")
+                return JSONResponse(
+                    status_code=500,
+                    content={"error": f"OCR processing failed: {str(ocr_error)}"}
+                )
             
             logger.info("Processing with ML models...")
             
