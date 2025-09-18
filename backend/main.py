@@ -127,11 +127,20 @@ async def analyze_tire(image: UploadFile = File(...)):
                 raise HTTPException(status_code=500, detail="Image enhancement failed")
             
             # OCR text extraction
-            ocr_text = detect_text(str(enhanced))
-            if not ocr_text:
+            logger.info(f"Running OCR on enhanced image: {enhanced}")
+            try:
+                ocr_text = detect_text(str(enhanced))
+                logger.info(f"OCR result: {ocr_text}")
+                if not ocr_text:
+                    return JSONResponse(
+                        status_code=400,
+                        content={"error": "No text detected in the tire image. Please try a clearer image with better lighting and contrast."}
+                    )
+            except Exception as ocr_error:
+                logger.error(f"OCR failed: {str(ocr_error)}")
                 return JSONResponse(
-                    status_code=400,
-                    content={"error": "No text detected in the tire image. Please try a clearer image."}
+                    status_code=500,
+                    content={"error": f"OCR processing failed: {str(ocr_error)}"}
                 )
             
             logger.info("Processing with ML models...")

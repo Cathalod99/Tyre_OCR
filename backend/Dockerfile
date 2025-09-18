@@ -22,8 +22,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create models directory
+# Copy Google Cloud credentials
+COPY ocrtyre.json /app/ocrtyre.json
+
+# Create models directory and copy YOLO model
 RUN mkdir -p models
+COPY models/Tyre_Detect.onnx /app/models/Tyre_Detect.onnx
 
 # Expose port
 EXPOSE 8000
