@@ -38,7 +38,7 @@ app.add_middleware(
 
 # Global variables for models
 yolov11 = None
-MODEL_PATH = "../models/Tyre_Detect.onnx"
+MODEL_PATH = "models/Tyre_Detect.onnx"  # Fixed path for container
 
 # Removed fallback OCR - using Google Cloud Vision API only
 
@@ -152,6 +152,11 @@ async def analyze_tire(image: UploadFile = File(...)):
         if img is None:
             raise HTTPException(status_code=400, detail="Could not decode image")
         
+        # Debug logging
+        logger.info(f"Image dimensions: {img.shape}")
+        logger.info(f"Image data type: {img.dtype}")
+        logger.info(f"Image size: {len(image_data)} bytes")
+        
         logger.info(f"Processing image: {image.filename}")
         
         # YOLO tire detection
@@ -215,6 +220,7 @@ async def analyze_tire(image: UploadFile = File(...)):
                 ocr_text = detect_text(str(enhanced))
                 logger.info(f"OCR result length: {len(ocr_text) if ocr_text else 0}")
                 logger.info(f"OCR result preview: {ocr_text[:200] if ocr_text else 'None'}")
+                logger.info(f"Full OCR text: {ocr_text}")
                 if not ocr_text:
                     return JSONResponse(
                         status_code=400,
@@ -228,9 +234,11 @@ async def analyze_tire(image: UploadFile = File(...)):
                 )
             
             logger.info("Processing with ML models...")
+            logger.info(f"Input OCR text for ML processing: {ocr_text[:500]}...")
             
             # ML models → dict
             result = build_result(ocr_text)
+            logger.info(f"ML processing result: {result}")
             if not isinstance(result, dict):
                 result = {"_raw": str(result)}
             
