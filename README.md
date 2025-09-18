@@ -256,3 +256,4 @@ Contributions are welcome! Areas for improvement:
 
 **Note**: This system requires Google Cloud Vision API for OCR functionality. The ML models work offline and don't require internet connectivity for information extraction.
 # Deployment trigger Thu Sep 18 13:30:08 WEST 2025
+# Trigger deployment Thu Sep 18 14:20:20 WEST 2025
