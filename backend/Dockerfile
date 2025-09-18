@@ -1,4 +1,4 @@
-# Minimal Dockerfile - guaranteed to work
+# Minimal Dockerfile - guaranteed to work (v2)
 FROM python:3.9-slim
 
 # Set working directory
