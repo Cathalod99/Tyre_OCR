@@ -11,11 +11,15 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender1 \
     libgomp1 \
+    execstack \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
-COPY backend/requirements.txt .
+COPY backend/requirements.alternative.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Fix ONNX Runtime executable stack issue
+RUN find /usr/local/lib/python3.9/site-packages/onnxruntime -name "*.so" -exec execstack -c {} \; || true
 
 # Copy the entire project
 COPY . .
