@@ -23,6 +23,8 @@ COPY . .
 # Set environment variables
 ENV PYTHONPATH=/app
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/ocrtyre-9369d891cdc1.json
+ENV OMP_NUM_THREADS=1
+ENV MKL_NUM_THREADS=1
 
 # Create necessary directories
 RUN mkdir -p /app/temp /app/doc/img
