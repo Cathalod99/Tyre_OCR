@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender1 \
     libgomp1 \
+    libgcc-s1 \
+    libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -19,8 +21,14 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Install ONNX Runtime separately to ensure it's available
+RUN pip install --no-cache-dir "onnxruntime>=1.12.0"
+
 # Verify ONNX Runtime installation
 RUN python -c "import onnxruntime; print('ONNX Runtime version:', onnxruntime.__version__)"
+
+# Test ONNX Runtime with a simple model
+RUN python -c "import onnxruntime; print('ONNX Runtime providers:', onnxruntime.get_available_providers())"
 
 # Copy application code
 COPY . .
