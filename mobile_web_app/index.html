@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tire OCR Scanner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .header {
+            background: #2196F3;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .upload-area {
+            background: white;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            border-color: #2196F3;
+            background: #f8f9ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #2196F3;
+            background: #f0f7ff;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 10px;
+        }
+        
+        .upload-text {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #1976D2;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+        }
+        
+        .btn-success:hover {
+            background: #45a049;
+        }
+        
+        .preview {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .preview img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .results {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .results h3 {
+            color: #2196F3;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .info-value {
+            color: #333;
+            text-align: right;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .tin-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #2196F3;
+        }
+        
+        .tin-section h4 {
+            color: #2196F3;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 Tire OCR Scanner</h1>
+        <p>Extract tire information from photos</p>
+    </div>
+    
+    <div class="container">
+        <div class="upload-area" onclick="showImageOptions()">
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">Tap to select tire image</div>
+            <div style="font-size: 14px; color: #999;">Camera or Photo Library</div>
+        </div>
+        
+        <input type="file" id="cameraInput" class="file-input" accept="image/*" capture="environment">
+        <input type="file" id="libraryInput" class="file-input" accept="image/*">
+        
+        <div class="preview" id="preview"></div>
+        
+        <div style="text-align: center;">
+            <button class="btn" id="analyzeBtn" onclick="analyzeTire()" disabled>Analyze Tire</button>
+            <button class="btn btn-success" id="clearBtn" onclick="clearResults()" style="display: none;">Clear Results</button>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            <div>🤖 Analyzing tire...</div>
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="success" class="success" style="display: none;"></div>
+        
+        <div id="results" class="results" style="display: none;">
+            <h3>📊 Tire Information</h3>
+            <div id="tireInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-detect the correct API URL based on device
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? 'http://localhost:8000' 
+            : `http://${window.location.hostname}:8000`;
+        let selectedFile = null;
+        
+        // File input handling for camera
+        document.getElementById('cameraInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                showPreview(file);
+                document.getElementById('analyzeBtn').disabled = false;
+                clearMessages();
+            }
+        });
+        
+        // File input handling for photo library
+        document.getElementById('libraryInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                showPreview(file);
+                document.getElementById('analyzeBtn').disabled = false;
+                clearMessages();
+            }
+        });
+        
+        // Show image selection options
+        function showImageOptions() {
+            // Create a better mobile-friendly selection
+            const cameraInput = document.getElementById('cameraInput');
+            const libraryInput = document.getElementById('libraryInput');
+            
+            // For mobile devices, we'll create a custom selection
+            if (isMobile()) {
+                showMobileImageOptions();
+            } else {
+                // Desktop fallback
+                const choice = confirm('Choose image source:\n\nOK = Camera\nCancel = Photo Library');
+                if (choice) {
+                    cameraInput.click();
+                } else {
+                    libraryInput.click();
+                }
+            }
+        }
+        
+        // Check if device is mobile
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+        
+        // Show mobile-friendly image selection
+        function showMobileImageOptions() {
+            // Create a modal overlay
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            // Create selection box
+            const selectionBox = document.createElement('div');
+            selectionBox.style.cssText = `
+                background: white;
+                border-radius: 15px;
+                padding: 30px;
+                text-align: center;
+                max-width: 300px;
+                width: 90%;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            `;
+            
+            selectionBox.innerHTML = `
+                <h3 style="margin: 0 0 20px 0; color: #333;">Select Image Source</h3>
+                <button onclick="selectCamera()" style="
+                    background: #2196F3;
+                    color: white;
+                    border: none;
+                    padding: 15px 30px;
+                    border-radius: 25px;
+                    font-size: 16px;
+                    margin: 10px;
+                    width: 200px;
+                    cursor: pointer;
+                ">📷 Take Photo</button>
+                <br>
+                <button onclick="selectLibrary()" style="
+                    background: #4CAF50;
+                    color: white;
+                    border: none;
+                    padding: 15px 30px;
+                    border-radius: 25px;
+                    font-size: 16px;
+                    margin: 10px;
+                    width: 200px;
+                    cursor: pointer;
+                ">🖼️ Photo Library</button>
+                <br>
+                <button onclick="closeModal()" style="
+                    background: #ccc;
+                    color: #333;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 20px;
+                    font-size: 14px;
+                    margin: 10px;
+                    cursor: pointer;
+                ">Cancel</button>
+            `;
+            
+            modal.appendChild(selectionBox);
+            document.body.appendChild(modal);
+            
+            // Store modal reference for closing
+            window.currentModal = modal;
+        }
+        
+        // Camera selection
+        function selectCamera() {
+            document.getElementById('cameraInput').click();
+            closeModal();
+        }
+        
+        // Library selection
+        function selectLibrary() {
+            document.getElementById('libraryInput').click();
+            closeModal();
+        }
+        
+        // Close modal
+        function closeModal() {
+            if (window.currentModal) {
+                document.body.removeChild(window.currentModal);
+                window.currentModal = null;
+            }
+        }
+        
+        // Drag and drop handling
+        const uploadArea = document.querySelector('.upload-area');
+        
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                selectedFile = files[0];
+                showPreview(files[0]);
+                document.getElementById('analyzeBtn').disabled = false;
+                clearMessages();
+            }
+        });
+        
+        function showPreview(file) {
+            const preview = document.getElementById('preview');
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Tire preview">`;
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        async function analyzeTire() {
+            if (!selectedFile) return;
+            
+            const loading = document.getElementById('loading');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const results = document.getElementById('results');
+            
+            loading.style.display = 'block';
+            analyzeBtn.disabled = true;
+            clearMessages();
+            
+            // Debug info
+            console.log('API URL:', API_BASE_URL);
+            console.log('Selected file:', selectedFile.name, selectedFile.size, 'bytes');
+            
+            try {
+                const formData = new FormData();
+                formData.append('image', selectedFile);
+                
+                console.log('Sending request to:', `${API_BASE_URL}/analyze-tire`);
+                
+                const response = await fetch(`${API_BASE_URL}/analyze-tire`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Error response:', errorData);
+                    throw new Error(errorData.error || `Server error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Success response:', data);
+                displayResults(data);
+                showSuccess('Tire analysis completed successfully!');
+                
+            } catch (error) {
+                console.error('Analysis error:', error);
+                showError(`Analysis failed: ${error.message}`);
+            } finally {
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        }
+        
+        function displayResults(data) {
+            const results = document.getElementById('results');
+            const tireInfo = document.getElementById('tireInfo');
+            
+            let html = `
+                <div class="info-row">
+                    <span class="info-label">Manufacturer:</span>
+                    <span class="info-value">${data.Manufacturer || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Model:</span>
+                    <span class="info-value">${data['Tire model'] || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Size:</span>
+                    <span class="info-value">${data['Tire size'] || 'N/A'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Load/Speed Rating:</span>
+                    <span class="info-value">${data['Load index and speed rating'] || 'N/A'}</span>
+                </div>
+            `;
+            
+            if (data['Scan TIN']) {
+                const tin = data['Scan TIN'];
+                html += `
+                    <div class="tin-section">
+                        <h4>🏭 DOT/TIN Information</h4>
+                        <div class="info-row">
+                            <span class="info-label">Full DOT:</span>
+                            <span class="info-value">${tin['Full DOT'] || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">DOT Code:</span>
+                            <span class="info-value">${tin['DOT Code'] || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Week/Year:</span>
+                            <span class="info-value">${tin['Week Code'] || 'N/A'}/${tin['Year Code'] || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Plant Code:</span>
+                            <span class="info-value">${tin['Plant Code'] || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Plant Name:</span>
+                            <span class="info-value">${tin['Plant Name'] || 'N/A'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Country:</span>
+                            <span class="info-value">${tin['Plant Country'] || 'N/A'}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            tireInfo.innerHTML = html;
+            results.style.display = 'block';
+            document.getElementById('clearBtn').style.display = 'inline-block';
+        }
+        
+        function clearResults() {
+            selectedFile = null;
+            document.getElementById('cameraInput').value = '';
+            document.getElementById('libraryInput').value = '';
+            document.getElementById('preview').innerHTML = '';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('clearBtn').style.display = 'none';
+            clearMessages();
+        }
+        
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+        
+        function showSuccess(message) {
+            const success = document.getElementById('success');
+            success.textContent = message;
+            success.style.display = 'block';
+        }
+        
+        function clearMessages() {
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('success').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

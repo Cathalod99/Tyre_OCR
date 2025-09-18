@@ -1,5 +1,16 @@
 # tire_classifier.py
-# Offline brand + model detection using brand list and optional brand_models.json.
+# Robust brand + model extraction for noisy, multi-line tyre OCR.
+# - Brand detection: exact → alias → fuzzy (per-word → whole-text)
+# - Model detection (date-friendly, line-aware):
+#     * dictionary-first via brand_models.json (optional)
+#     * line-window around brand (±2 before, +3 after)
+#     * DOTALL brand-centered window (±120 chars)
+#     * whole-text fallback
+#   Scoring: (frequency in full OCR, appears on brand-near lines, safety-line penalty,
+#             tech-tag penalty (if other candidates exist), has-digit, length)
+# - Strong, explicit stopword set to kill boilerplate terms (e.g., "DUE", "UNDERINFLATION").
+# - Never blacklist real models (e.g., TURANZA, POTENZA, PRIMACY, etc.).
+
 from __future__ import annotations
 import json
 import os
@@ -7,6 +18,9 @@ import re
 from difflib import SequenceMatcher
 from typing import Dict, List, Optional, Tuple
 
+# ------------------------------
+# Brand catalogue (extend as needed)
+# ------------------------------
 BRANDS: List[str] = [
     "APlus","AUSTONE","Alliance","Altenzo","Antares","Apollo","Arivo","Atlas","Autogreen","Avon",
     "BF Goodrich","Barum","Bridgestone","CST","Ceat","Challenger","Chengshan","Continental","Cooper",
@@ -25,12 +39,49 @@ BRANDS: List[str] = [
     "Winrun","Yartu","Yokohama","Zeetex"
 ]
 
-MODEL_STOPWORDS = {
-    "TOTAL","PERFORMANCE","TREAD","TREADWEAR","TRACTION","TEMPERATURE","RADIAL","TUBELESS",
-    "OUTSIDE","EXTRA","LOAD","WARNING","MAX","PRESS","MADE","IN","POLYESTER","POLYAMIDE",
-    "STEEL","SIDEWALL","PLY","PLIES","ROTATION","SAFETY","M+S","XL","RIM","RIMS"
+# Common printed variants → canonical names
+BRAND_ALIASES: Dict[str, str] = {
+    "BFGOODRICH": "BF Goodrich",
+    "B.F.GOODRICH": "BF Goodrich",
+    "BRIDGESTONE": "Bridgestone",
+    "MICHELIN": "Michelin",
+    "GOODYEAR": "Goodyear",
+    "PIRELLI": "Pirelli",
+    "CONTINENTAL": "Continental",
 }
 
+# Do NOT put real model names here.
+MODEL_STOPWORDS = {
+    # generic
+    "TOTAL","PERFORMANCE","TREAD","TREADWEAR","TRACTION","TEMPERATURE","RADIAL","TUBELESS",
+    "OUTSIDE","EXTRA","LOAD","WARNING","MAX","PRESS","PRESSURE","MADE","IN","POLYESTER","POLYAMIDE",
+    "STEEL","SIDEWALL","PLY","PLIES","ROTATION","SAFETY","M+S","XL","RIM","RIMS","DOT","OUT","SIDE",
+    "ROAD","KPA","PSI","BAR","MAXLOAD","MAXPRESS","TEMPERATUREA","TEMPERATUREB","TRACTIONA","TRACTIONB",
+    # boilerplate/safety phrases that pollute models
+    "DUE","UNDERINFLATION","OVERLOADING","FOLLOW","OWNER","MANUAL","VEHICLE","EXPLOSION","IMPROPER",
+    "MOUNTING","NEVER","EXCEED","SEAT","BEADS","SERIOUS","INJURY","RECOMMENDED","INFLATE","ONLY",
+    "SPECIALLY","TRAINED","PERSONS","SHOULD","TIRES","FAILURE","ASSEMBLY","COLD","SINGLE","DUAL",
+    "MAX","LOAD","WAY","MAY","PRESS","APO","TL"
+}
+
+# Tech tags / side marks that are not usually the commercial model; we *demote* them if we have a better candidate.
+TECH_TAGS = {
+    "ENLITEN","ECOPIA","ECO","RUNFLAT","MOE","AO","ROF","SSR","MO","NCS","PNCS","CINTURATO","MFS","RSC"
+}
+
+# Optional small, built-in fallback model families for big brands
+FALLBACK_MODELS: Dict[str, List[str]] = {
+    "BRIDGESTONE": ["TURANZA", "POTENZA", "DUELER", "ECOPIA", "BLIZZAK", "ALENZA", "DURAVIS"],
+    "MICHELIN":    ["PRIMACY", "PILOT", "X-ICE", "ENERGY", "LATITUDE", "CROSSCLIMATE"],
+    "GOODYEAR":    ["EFFICIENTGRIP", "EAGLE", "VECTOR", "ULTRAGRIP"],
+    "CONTINENTAL": ["PREMIUMCONTACT", "SPORTCONTACT", "ECOCONTACT", "VANCONTACT", "ALLSEASONCONTACT"],
+    "PIRELLI":     ["CINTURATO", "P ZERO", "SCORPION", "WINTER"],
+    "DUNLOP":      ["SPORT", "SP SPORT", "WINTER", "STREETRESPONSE"]
+}
+
+# ------------------------------
+# Helpers
+# ------------------------------
 def _norm(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", s.lower())
 
@@ -39,11 +90,11 @@ def _ratio(a: str, b: str) -> float:
 
 def _load_model_db() -> Dict[str, List[str]]:
     """
-    Optional file: /mnt/data/brand_models.json
-    Shape:
+    Optional JSON:
+      /mnt/data/brand_models.json   (fallback: data/brand_models.json)
       {
-        "CONTINENTAL": ["PremiumContact", "SportContact", "EcoContact", ...],
-        "EVENT": ["POTENTEM", "FUTURUM", ...]
+        "BRIDGESTONE": ["Turanza", "Potenza", "Dueler", "Ecopia"],
+        ...
       }
     """
     paths = ["/mnt/data/brand_models.json", "data/brand_models.json"]
@@ -51,8 +102,8 @@ def _load_model_db() -> Dict[str, List[str]]:
         if os.path.exists(p):
             try:
                 with open(p, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                out = {}
+                    data = json.load(f) or {}
+                out: Dict[str, List[str]] = {}
                 for k, arr in data.items():
                     out[str(k).upper()] = [str(x).strip() for x in (arr or []) if str(x).strip()]
                 return out
@@ -62,48 +113,207 @@ def _load_model_db() -> Dict[str, List[str]]:
 
 MODELS = _load_model_db()
 
-def best_brand_match(text: str, threshold: float = 0.30) -> Tuple[Optional[str], float]:
+def _word_tokens(text: str) -> List[str]:
+    return re.findall(r"\b[A-Za-z][A-Za-z0-9\-\+]*\b", text)
+
+def _best_exact_or_alias(text: str) -> Optional[str]:
+    up = text.upper()
+    # exact brand with flexible whitespace
     for brand in BRANDS:
         pat = r"\b" + re.escape(brand).replace(r"\ ", r"\s+") + r"\b"
-        if re.search(pat, text, re.IGNORECASE):
-            return brand, 1.0
-    scores = [(brand, _ratio(text, brand)) for brand in BRANDS]
-    best = max(scores, key=lambda x: x[1])
-    return (best[0], best[1]) if best[1] >= threshold else (None, 0.0)
+        if re.search(pat, up, re.IGNORECASE):
+            return brand
+    # alias
+    for alias, canonical in BRAND_ALIASES.items():
+        if re.search(rf"\b{re.escape(alias)}\b", up):
+            return canonical
+    return None
+
+# ------------------------------
+# Brand Detection
+# ------------------------------
+def best_brand_match(text: str, threshold: float = 0.30) -> Tuple[Optional[str], float]:
+    """
+    Returns (brand, score). Score ∈ [0,1].
+    Strategy:
+      1) Exact or alias match → (brand, 1.0)
+      2) Fuzzy per-word vs brand list (>= threshold)
+      3) Fuzzy whole-text fallback (>= threshold)
+    """
+    exact = _best_exact_or_alias(text)
+    if exact:
+        return exact, 1.0
+
+    up = text.upper()
+    words = [w for w in _word_tokens(up) if len(w) >= 4]
+    best_brand: Optional[str] = None
+    best_score = 0.0
+
+    for brand in BRANDS:
+        for w in words:
+            sc = _ratio(w, brand)
+            if sc > best_score and sc >= threshold:
+                best_score = sc
+                best_brand = brand
+
+    if best_brand:
+        return best_brand, best_score
+
+    scores = [(brand, _ratio(up, brand)) for brand in BRANDS]
+    brand, sc = max(scores, key=lambda x: x[1])
+    return (brand, sc) if sc >= threshold else (None, 0.0)
+
+# ------------------------------
+# Model Detection
+# ------------------------------
+def _tokens_model_like(text: str) -> List[str]:
+    """
+    Extract tokens that look like model names:
+      - start with a letter
+      - allow digits and dashes
+      - length >= 3 (e.g., TURANZA, ENLITEN, X-ICE, PRIMACY4)
+    """
+    up = text.upper()
+    toks = re.findall(r"\b[A-Z][A-Z0-9\-]{2,}\b", up)
+    # Filter stopwords and obvious junk
+    toks = [t for t in toks if t not in MODEL_STOPWORDS]
+    return toks
+
+def _brand_line_indices(text: str, manufacturer: str) -> List[int]:
+    if not manufacturer:
+        return []
+    lines = text.splitlines()
+    inds = []
+    brand_re = re.compile(rf"(?i)\b{re.escape(manufacturer)}\b")
+    brand_up_re = re.compile(rf"(?i)\b{re.escape(manufacturer.upper())}\b")
+    for i, ln in enumerate(lines):
+        if brand_re.search(ln) or brand_up_re.search(ln):
+            inds.append(i)
+    return inds
+
+def _window_lines(text: str, centers: List[int], before: int = 2, after: int = 3) -> str:
+    lines = text.splitlines()
+    keep: List[str] = []
+    for c in centers:
+        lo = max(0, c - before)
+        hi = min(len(lines), c + after + 1)
+        keep.extend(lines[lo:hi])
+    return "\n".join(keep)
+
+def _is_safety_line(line: str) -> bool:
+    # if a line contains several boilerplate markers, treat it as a safety line
+    markers = (
+        "WARNING","EXPLOSION","UNDERINFLATION","OVERLOADING","OWNER","MANUAL","VEHICLE",
+        "IMPROPER","MOUNT","NEVER","EXCEED","PSI","KPA","LOAD","INJURY","RECOMMENDED"
+    )
+    up = line.upper()
+    hit = sum(1 for m in markers if m in up)
+    return hit >= 2
 
 def detect_model(text: str, manufacturer: str) -> str:
     """
-    Try exact model list first (if available), then heuristic tokens around brand mention.
+    Model extraction:
+      1) brand_models.json (dictionary-first) over the full OCR text.
+      2) Use tokens from lines near the brand (±2…+3 lines).
+      3) Brand-centered DOTALL window (±120 chars).
+      4) Whole-text fallback.
+      Scoring tuple: (frequency, near-brand bonus, safety-line penalty, tech-tag penalty, has-digit, length).
     """
     if not manufacturer:
         return ""
-    brand = manufacturer.upper()
+    brand = manufacturer.strip()
+    brand_up = brand.upper()
 
-    # 1) Look up in model DB with regex-ish presence in text
-    db = MODELS.get(brand, [])
-    hits = []
-    for m in db:
+    # 1) Dictionary-first across entire OCR (plus fallback families if no JSON)
+    dict_list = MODELS.get(brand_up) or FALLBACK_MODELS.get(brand_up, [])
+    if dict_list:
+        hits = []
+        for m in dict_list:
+            if not m:
+                continue
+            pat = r"\b" + re.escape(m).replace(r"\ ", r"\s+") + r"\b"
+            if re.search(pat, text, flags=re.IGNORECASE):
+                hits.append(m)
+        if hits:
+            # prefer the longest with digits, else longest
+            with_digit = [h for h in hits if re.search(r"\d", h)]
+            choice = (max(with_digit, key=len) if with_digit else max(hits, key=len))
+            # preserve original casing if possible
+            m2 = re.search(rf"\b({re.escape(choice)})\b", text, flags=re.IGNORECASE)
+            return m2.group(1).strip() if m2 else choice.title()
+
+    # 2) Line-aware region around brand mentions
+    centers = _brand_line_indices(text, brand)
+    lines = text.splitlines()
+    region = _window_lines(text, centers) if centers else ""
+    region_tokens = _tokens_model_like(region) if region else []
+
+    # 3) Brand-centered DOTALL window (±120 chars both sides)
+    if not region_tokens:
+        m = re.search(rf"(?is)(.{{0,120}})\b{re.escape(brand)}\b(.{{0,120}})", text)
         if not m:
-            continue
-        pat = r"\b" + re.escape(m).replace(r"\ ", r"\s+") + r"\b"
-        if re.search(pat, text, re.IGNORECASE):
-            hits.append(m)
-    if hits:
-        # prefer the longest / contains digit
-        with_digit = [h for h in hits if re.search(r"\d", h)]
-        return (with_digit[0] if with_digit else max(hits, key=len))
+            m = re.search(rf"(?is)(.{{0,120}})\b{re.escape(brand_up)}\b(.{{0,120}})", text)
+        if m:
+            win = (m.group(1) or "") + " " + brand + " " + (m.group(2) or "")
+            region_tokens = _tokens_model_like(win)
 
-    # 2) Heuristic: take 50-char window after the brand occurrence
-    win = re.search(rf"(?i)\b{re.escape(manufacturer)}\b(.{{0,50}})", text)
-    window = win.group(1) if win else text
-    tokens = re.findall(r"\b[A-Z][A-Za-z0-9\-]+\b", window.upper())
-    tokens = [t for t in tokens if t not in MODEL_STOPWORDS and _norm(t) != _norm(manufacturer)]
-    cands = []
-    for n in (3, 2, 1):
-        for i in range(len(tokens)-n+1):
-            phrase = " ".join(tokens[i:i+n])
-            score = (1 if re.search(r"\d", phrase) else 0, len(phrase))
-            cands.append((score, phrase))
-        if cands:
-            break
-    return (sorted(cands, reverse=True)[0][1] if cands else "").title()
+    # 4) Whole-text fallback
+    if not region_tokens:
+        region_tokens = _tokens_model_like(text)
+
+    # Remove the brand token itself (any case)
+    region_tokens = [t for t in region_tokens if _norm(t) != _norm(brand_up)]
+    if not region_tokens:
+        return ""
+
+    # Build per-line lookup for penalties/bonuses
+    full_up = text.upper()
+    brand_near_up = region.upper() if region else ""
+    safety_lines_idx = {i for i, ln in enumerate(lines) if _is_safety_line(ln)}
+    token_in_safety_lines: Dict[str, int] = {}
+    token_in_brand_lines: Dict[str, int] = {}
+
+    # map token appearances to line indices
+    for i, ln in enumerate(lines):
+        up = ln.upper()
+        for t in set(region_tokens):
+            if re.search(rf"\b{re.escape(t)}\b", up):
+                if i in safety_lines_idx:
+                    token_in_safety_lines[t] = token_in_safety_lines.get(t, 0) + 1
+                if centers and any(abs(i - c) <= 3 for c in centers):
+                    token_in_brand_lines[t] = token_in_brand_lines.get(t, 0) + 1
+
+    uniq = sorted(set(region_tokens))
+    scored = []
+    for t in uniq:
+        freq = len(re.findall(rf"\b{re.escape(t)}\b", full_up))
+        near = 1 if (brand_near_up and re.search(rf"\b{re.escape(t)}\b", brand_near_up)) else 0
+        safety_pen = token_in_safety_lines.get(t, 0)  # higher → worse
+        tech_pen = 1 if (t in TECH_TAGS) else 0
+        has_digit = 1 if re.search(r"\d", t) else 0
+        score = (freq, near, -safety_pen, -tech_pen, has_digit, len(t))
+        scored.append((score, t))
+
+    scored.sort(reverse=True)
+    best_tok = scored[0][1]
+
+    # If the winner is a tech tag but there exists a non-tech candidate with decent freq, switch to it
+    if best_tok in TECH_TAGS:
+        non_tech = [t for (_, t) in scored if t not in TECH_TAGS]
+        if non_tech:
+            best_tok = non_tech[0]
+
+    # Preserve original casing from the OCR if possible
+    m2 = re.search(rf"\b({re.escape(best_tok)})\b", text, flags=re.IGNORECASE)
+    return m2.group(1).strip() if m2 else best_tok.title()
+
+# ------------------------------
+# Convenience
+# ------------------------------
+def extract_brand_and_model(text: str) -> Tuple[Optional[str], float, str]:
+    """
+    Returns (brand, brand_score, model).
+    """
+    brand, score = best_brand_match(text)
+    model = detect_model(text, brand or "")
+    return brand, score, model
