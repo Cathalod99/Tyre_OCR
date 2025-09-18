@@ -222,9 +222,26 @@
 
     <script>
         // Auto-detect the correct API URL based on device
-        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-            ? 'http://localhost:8000' 
-            : `http://${window.location.hostname}:8000`;
+        // API URL configuration - supports both local development and production
+        const API_BASE_URL = (() => {
+            // Check for environment variable first (for production builds)
+            if (window.REACT_APP_API_URL) {
+                return window.REACT_APP_API_URL;
+            }
+            
+            // Check for Netlify environment variable
+            if (window.process && window.process.env && window.process.env.REACT_APP_API_URL) {
+                return window.process.env.REACT_APP_API_URL;
+            }
+            
+            // Local development fallback
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                return 'http://localhost:8000';
+            }
+            
+            // Production fallback - you can change this to your deployed backend URL
+            return 'https://your-backend.railway.app'; // Replace with your actual Railway URL
+        })();
         let selectedFile = null;
         
         // File input handling for camera
