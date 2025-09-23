@@ -61,9 +61,17 @@ async def lifespan(app: FastAPI):
     
     try:
         # Check ONNX Runtime availability first
-        import onnxruntime
-        logger.info(f"ONNX Runtime version: {onnxruntime.__version__}")
-        logger.info(f"Available providers: {onnxruntime.get_available_providers()}")
+        import onnxruntime as ort
+        logger.info(f"ONNX Runtime version: {ort.__version__}")
+        logger.info(f"Available providers: {ort.get_available_providers()}")
+        
+        # Test model loading with Railway-optimized settings
+        logger.info("Testing ONNX Runtime with YOLO model...")
+        sess_opts = ort.SessionOptions()
+        sess_opts.intra_op_num_threads = 1
+        sess_opts.inter_op_num_threads = 1
+        test_session = ort.InferenceSession(MODEL_PATH, sess_options=sess_opts, providers=["CPUExecutionProvider"])
+        logger.info("ONNX Runtime test successful")
         
         logger.info("Loading YOLO model...")
         yolov11 = YOLOv11(MODEL_PATH, conf_thres=0.2, iou_thres=0.3)
@@ -126,6 +134,25 @@ async def health_check():
             "ml_models": True
         }
     }
+
+@app.get("/debug/onnx")
+async def onnx_debug():
+    """Debug endpoint to check ONNX Runtime status"""
+    try:
+        import onnxruntime as ort
+        return {
+            "onnxruntime": ort.__version__,
+            "available_providers": ort.get_available_providers(),
+            "yolo_model_loaded": yolov11 is not None,
+            "model_path": MODEL_PATH
+        }
+    except Exception as e:
+        return {
+            "onnxruntime": None, 
+            "error": str(e),
+            "yolo_model_loaded": False,
+            "model_path": MODEL_PATH
+        }
 
 @app.get("/test-gcp")
 async def test_gcp_credentials():
