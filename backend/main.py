@@ -65,13 +65,28 @@ async def lifespan(app: FastAPI):
         logger.info(f"ONNX Runtime version: {ort.__version__}")
         logger.info(f"Available providers: {ort.get_available_providers()}")
         
+        # Log model path and size for sanity check
+        from pathlib import Path
+        model_path = Path(MODEL_PATH)
+        logger.info("Model path=%s exists=%s size=%s bytes", 
+                   model_path, model_path.exists(), 
+                   model_path.stat().st_size if model_path.exists() else -1)
+        
         # Test model loading with Railway-optimized settings
         logger.info("Testing ONNX Runtime with YOLO model...")
         sess_opts = ort.SessionOptions()
         sess_opts.intra_op_num_threads = 1
         sess_opts.inter_op_num_threads = 1
+        sess_opts.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
         test_session = ort.InferenceSession(MODEL_PATH, sess_options=sess_opts, providers=["CPUExecutionProvider"])
         logger.info("ONNX Runtime test successful")
+        
+        # Preload test - warm-up inference to catch bad opsets early
+        logger.info("Running warm-up inference...")
+        import numpy as np
+        dummy_input = np.random.rand(1, 3, 640, 640).astype(np.float32)
+        _ = test_session.run(None, {"images": dummy_input})
+        logger.info("Warm-up inference successful")
         
         logger.info("Loading YOLO model...")
         yolov11 = YOLOv11(MODEL_PATH, conf_thres=0.2, iou_thres=0.3)
@@ -124,10 +139,25 @@ def lookup_plant_info(plant_code: str) -> dict:
 async def health_check():
     """Health check endpoint"""
     yolo_status = "available" if yolov11 else "fallback mode"
+    
+    # Check ONNX Runtime availability
+    try:
+        import onnxruntime as ort
+        onnx_available = True
+        onnx_version = ort.__version__
+        onnx_providers = ort.get_available_providers()
+    except ImportError:
+        onnx_available = False
+        onnx_version = None
+        onnx_providers = []
+    
     return {
         "status": "healthy", 
         "message": "Tire OCR API is running",
         "yolo_status": yolo_status,
+        "onnx": onnx_available,
+        "onnx_version": onnx_version,
+        "onnx_providers": onnx_providers,
         "features": {
             "yolo_detection": yolov11 is not None,
             "ocr_processing": True,
@@ -140,11 +170,21 @@ async def onnx_debug():
     """Debug endpoint to check ONNX Runtime status"""
     try:
         import onnxruntime as ort
+        import platform
+        
+        # Check model file
+        from pathlib import Path
+        model_path = Path(MODEL_PATH)
+        
         return {
             "onnxruntime": ort.__version__,
             "available_providers": ort.get_available_providers(),
+            "platform": platform.platform(),
+            "python_version": platform.python_version(),
             "yolo_model_loaded": yolov11 is not None,
-            "model_path": MODEL_PATH
+            "model_path": MODEL_PATH,
+            "model_exists": model_path.exists(),
+            "model_size_bytes": model_path.stat().st_size if model_path.exists() else -1
         }
     except Exception as e:
         return {
