@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from contextlib import asynccontextmanager
 import uvicorn
 import os
 import sys
@@ -25,42 +26,12 @@ from plant_codes import PLANT_MAP
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Tire OCR API", version="1.0.0")
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your mobile app's origin
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Global variables for models
 yolov11 = None
 MODEL_PATH = "models/Tyre_Detect.onnx"  # Fixed path for container
 
-# Removed fallback OCR - using Google Cloud Vision API only
-
-def lookup_plant_info(plant_code: str) -> dict:
-    """
-    Look up plant information from plant code.
-    """
-    if not plant_code:
-        return None
-    
-    clean_code = plant_code.strip().upper()
-    plant_info = PLANT_MAP.get(clean_code)
-    if plant_info:
-        return {
-            "Plant Code": clean_code,
-            "Factory": plant_info.get("plant", "Unknown"),
-            "Country": plant_info.get("country", "Unknown")
-        }
-    return None
-
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     """Initialize models on startup"""
     global yolov11
     
@@ -99,12 +70,48 @@ async def startup_event():
         logger.info("YOLO model loaded successfully")
     except ImportError as e:
         logger.error(f"ONNX Runtime not available: {e}")
-        logger.error("ONNX Runtime is required for proper tire detection")
+        logger.error("ONNX Runtime is required for YOLO tire detection")
         logger.error("Please check Docker build logs for installation issues")
         raise e
     except Exception as e:
         logger.error(f"Failed to load YOLO model: {e}")
+        logger.error("YOLO model loading failed - check model file and ONNX Runtime installation")
         raise e
+    
+    yield
+    
+    # Cleanup code here if needed
+    logger.info("Shutting down application...")
+
+app = FastAPI(title="Tire OCR API", version="1.0.0", lifespan=lifespan)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your mobile app's origin
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Removed fallback OCR - using Google Cloud Vision API only
+
+def lookup_plant_info(plant_code: str) -> dict:
+    """
+    Look up plant information from plant code.
+    """
+    if not plant_code:
+        return None
+    
+    clean_code = plant_code.strip().upper()
+    plant_info = PLANT_MAP.get(clean_code)
+    if plant_info:
+        return {
+            "Plant Code": clean_code,
+            "Factory": plant_info.get("plant", "Unknown"),
+            "Country": plant_info.get("country", "Unknown")
+        }
+    return None
 
 @app.get("/health")
 async def health_check():
@@ -198,6 +205,7 @@ async def analyze_tire(image: UploadFile = File(...)):
         (x1, y1, x2, y2) = ocr_crops[0]
         x1, y1, x2, y2 = map(int, (max(0, x1), max(0, y1), max(0, x2), max(0, y2)))
         crop = img[y1:y2, x1:x2, :]
+        logger.info("Using YOLO-detected tire region")
         
         # Create temporary files for processing
         with tempfile.TemporaryDirectory() as temp_dir:

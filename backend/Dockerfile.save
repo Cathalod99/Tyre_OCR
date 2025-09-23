@@ -21,14 +21,14 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Upgrade pip and install dependencies
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-
-# Install ONNX Runtime first with specific flags for Railway
-RUN pip install --no-cache-dir --no-deps onnxruntime==1.19.2
-
-# Install other dependencies
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Force install ONNX Runtime with specific version
+RUN pip install --no-cache-dir --force-reinstall onnxruntime==1.19.2
+
+# Verify uvicorn installation
+RUN python -c "import uvicorn; print('Uvicorn version:', uvicorn.__version__)"
 
 # Verify ONNX Runtime installation
 RUN python -c "import onnxruntime; print('ONNX Runtime version:', onnxruntime.__version__); print('Available providers:', onnxruntime.get_available_providers())"
@@ -54,4 +54,5 @@ ENV PYTHONPATH=/app
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/ocrtyre-9369d891cdc1.json
 
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/usr/local/bin/python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/usr/local/bin/python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

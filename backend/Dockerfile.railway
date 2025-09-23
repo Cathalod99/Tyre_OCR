@@ -1,4 +1,4 @@
-# Minimal Dockerfile - guaranteed to work (v2)
+# Railway-optimized Dockerfile with ONNX Runtime support
 FROM python:3.9-slim
 
 # Set working directory
@@ -16,18 +16,17 @@ RUN apt-get update && apt-get install -y \
     libgfortran5 \
     libopenblas0 \
     liblapack3 \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
-COPY requirements.txt .
+COPY requirements.railway.txt requirements.txt
 
 # Upgrade pip and install dependencies
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# Install ONNX Runtime first with specific flags for Railway
-RUN pip install --no-cache-dir --no-deps onnxruntime==1.19.2
-
-# Install other dependencies
+# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Verify ONNX Runtime installation
