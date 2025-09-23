@@ -2,6 +2,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+from starlette.middleware.base import BaseHTTPMiddleware
 import uvicorn
 import os
 import sys
@@ -13,6 +14,7 @@ import logging
 import hashlib
 import time
 import uuid
+import asyncio
 from typing import Optional
 
 # Add the parent directory to the path so we can import our modules
@@ -30,6 +32,21 @@ from plant_codes import PLANT_MAP
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+class TimeoutMiddleware(BaseHTTPMiddleware):
+    """Middleware to add request timeout"""
+    def __init__(self, app, timeout_seconds: int = 30):
+        super().__init__(app)
+        self.timeout_seconds = timeout_seconds
+
+    async def dispatch(self, request: Request, call_next):
+        try:
+            return await asyncio.wait_for(call_next(request), timeout=self.timeout_seconds)
+        except asyncio.TimeoutError:
+            return JSONResponse(
+                status_code=504,
+                content={"error": "Request timeout", "timeout_seconds": self.timeout_seconds}
+            )
+
 # Global variables for models
 yolov11 = None
 onnx_session = None
@@ -40,6 +57,10 @@ MODEL_SHA256 = None
 async def lifespan(app: FastAPI):
     """Initialize models on startup"""
     global yolov11, onnx_session, MODEL_SHA256
+    
+    # Log Railway environment
+    port = os.getenv('PORT', '8000')
+    logger.info("level=info event=startup port=%s", port)
     
     # Set up Google Cloud credentials from environment variable if available
     gcp_creds_base64 = os.getenv('GOOGLE_CLOUD_CREDENTIALS_BASE64')
@@ -130,6 +151,9 @@ async def lifespan(app: FastAPI):
             logger.warning("Error closing ONNX session: %s", e)
 
 app = FastAPI(title="Tire OCR API", version="1.0.0", lifespan=lifespan)
+
+# Add timeout middleware (30 seconds for inference)
+app.add_middleware(TimeoutMiddleware, timeout_seconds=30)
 
 # Add CORS middleware
 app.add_middleware(
@@ -282,7 +306,7 @@ async def analyze_tire(request: Request, image: UploadFile = File(...)):
         if len(image_data) > 8 * 1024 * 1024:  # 8MB
             raise HTTPException(status_code=400, detail="Image too large (max 8MB)")
         
-        logger.info("request_id=%s filename=%s size_bytes=%d content_type=%s", 
+        logger.info("level=info event=inference_start req_id=%s filename=%s bytes=%d content_type=%s", 
                    request_id, image.filename, len(image_data), image.content_type)
         
         # Decode image data
@@ -430,17 +454,17 @@ async def analyze_tire(request: Request, image: UploadFile = File(...)):
             
             # Log successful completion with latency
             latency_ms = int((time.time() - start_time) * 1000)
-            logger.info("request_id=%s status=success latency_ms=%d yolo_used=%s", 
-                       request_id, latency_ms, yolov11 is not None)
+            logger.info("level=info event=inference_done req_id=%s ms=%d yolo=%s bytes=%d status=success", 
+                       request_id, latency_ms, yolov11 is not None, len(image_data))
             return cleaned_result
             
     except HTTPException:
         latency_ms = int((time.time() - start_time) * 1000)
-        logger.warning("request_id=%s status=client_error latency_ms=%d", request_id, latency_ms)
+        logger.warning("level=warning event=inference_done req_id=%s ms=%d status=client_error", request_id, latency_ms)
         raise
     except Exception as e:
         latency_ms = int((time.time() - start_time) * 1000)
-        logger.error("request_id=%s status=server_error latency_ms=%d error=%s", 
+        logger.error("level=error event=inference_done req_id=%s ms=%d status=server_error error=%s", 
                     request_id, latency_ms, str(e))
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
