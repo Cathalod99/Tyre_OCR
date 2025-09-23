@@ -69,14 +69,13 @@ async def lifespan(app: FastAPI):
         yolov11 = YOLOv11(MODEL_PATH, conf_thres=0.2, iou_thres=0.3)
         logger.info("YOLO model loaded successfully")
     except ImportError as e:
-        logger.error(f"ONNX Runtime not available: {e}")
-        logger.error("ONNX Runtime is required for YOLO tire detection")
-        logger.error("Please check Docker build logs for installation issues")
-        raise e
+        logger.warning(f"ONNX Runtime not available: {e}")
+        logger.warning("YOLO detection will be disabled. Using fallback detection.")
+        yolov11 = None
     except Exception as e:
         logger.error(f"Failed to load YOLO model: {e}")
-        logger.error("YOLO model loading failed - check model file and ONNX Runtime installation")
-        raise e
+        logger.warning("YOLO detection will be disabled. Using fallback detection.")
+        yolov11 = None
     
     yield
     
@@ -189,23 +188,25 @@ async def analyze_tire(image: UploadFile = File(...)):
         
         logger.info(f"Processing image: {image.filename}")
         
-        # YOLO tire detection
-        if not yolov11:
-            raise HTTPException(status_code=500, detail="YOLO model not loaded - ONNX Runtime required")
-        
-        ocr_crops, boxes, scores, class_ids = yolov11(img)
-        
-        if not ocr_crops:
-            return JSONResponse(
-                status_code=400,
-                content={"error": "No tire detected in the image. Please ensure the tire is clearly visible."}
-            )
-        
-        # Process the first detected tire
-        (x1, y1, x2, y2) = ocr_crops[0]
-        x1, y1, x2, y2 = map(int, (max(0, x1), max(0, y1), max(0, x2), max(0, y2)))
-        crop = img[y1:y2, x1:x2, :]
-        logger.info("Using YOLO-detected tire region")
+        # YOLO tire detection or fallback to full image
+        if yolov11:
+            ocr_crops, boxes, scores, class_ids = yolov11(img)
+            
+            if not ocr_crops:
+                return JSONResponse(
+                    status_code=400,
+                    content={"error": "No tire detected in the image. Please ensure the tire is clearly visible."}
+                )
+            
+            # Process the first detected tire
+            (x1, y1, x2, y2) = ocr_crops[0]
+            x1, y1, x2, y2 = map(int, (max(0, x1), max(0, y1), max(0, x2), max(0, y2)))
+            crop = img[y1:y2, x1:x2, :]
+            logger.info("Using YOLO-detected tire region")
+        else:
+            # Fallback: use the entire image
+            crop = img
+            logger.info("YOLO not available, using full image for OCR")
         
         # Create temporary files for processing
         with tempfile.TemporaryDirectory() as temp_dir:
