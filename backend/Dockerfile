@@ -1,31 +1,23 @@
 FROM python:3.11-slim
 
-# Install libgomp for ONNX Runtime
-RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && rm -rf /var/lib/apt/lists/*
+# System deps for ONNX Runtime (OpenMP)
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+  && rm -rf /var/lib/apt/lists/*
 
+# Workdir first
 WORKDIR /app
 
-# Copy requirements first for better caching
+# Copy only requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies
+# Upgrade pip and install deps
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Now copy the rest of your app (includes backend/, models/, etc.)
 COPY . .
-
-# Copy Google Cloud credentials
-COPY ocrtyre-9369d891cdc1.json /app/ocrtyre-9369d891cdc1.json
-
-# Create models directory and copy YOLO model
-RUN mkdir -p models
-COPY models/Tyre_Detect.onnx /app/models/Tyre_Detect.onnx
 
 # Test ONNX Runtime installation
 RUN python -c "import onnxruntime; print('ONNX Runtime version:', onnxruntime.__version__)"
 
-# Bind to Railway's PORT environment variable
-ENV PORT=8080
-
-# Run the application - Railway will set the PORT
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "0"]
+# Start: bind to Railway's $PORT
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
