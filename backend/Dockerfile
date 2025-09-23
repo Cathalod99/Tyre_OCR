@@ -9,7 +9,7 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
@@ -28,4 +28,4 @@ RUN python -c "import onnxruntime; print('ONNX Runtime version:', onnxruntime.__
 ENV PORT=8080
 
 # Run the application - Railway will set the PORT
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "0"]
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "0"]
