@@ -1,40 +1,23 @@
-# Minimal Dockerfile - guaranteed to work (v3)
-FROM python:3.9-slim
+FROM python:3.11-slim
 
-# Set working directory
+# System deps for ONNX Runtime (OpenMP)
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+  && rm -rf /var/lib/apt/lists/*
+
+# Workdir first
 WORKDIR /app
 
-# Install only the absolute minimum for opencv-python-headless
-RUN apt-get update && apt-get install -y \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender1 \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
+# Copy only requirements first for better caching
+COPY backend/requirements.txt .
 
-# Copy requirements first for better caching
-COPY backend/requirements.final.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip and install deps
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire project
+# Now copy the rest of your app (includes backend/, models/, etc.)
 COPY . .
 
-# Set environment variables
-ENV PYTHONPATH=/app
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/ocrtyre-9369d891cdc1.json
-ENV OMP_NUM_THREADS=1
-ENV MKL_NUM_THREADS=1
+# Test ONNX Runtime installation
+RUN python -c "import onnxruntime; print('ONNX Runtime version:', onnxruntime.__version__)"
 
-# Create necessary directories
-RUN mkdir -p /app/temp /app/doc/img
-
-# Expose port
-EXPOSE 8000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
-
-# Run the application
-CMD ["python", "backend/main.py"]
+# Start: bind to Railway's $PORT
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --timeout-keep-alive 15"]

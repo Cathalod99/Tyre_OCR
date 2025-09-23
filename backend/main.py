@@ -252,6 +252,28 @@ async def onnx_debug():
             "model_path": MODEL_PATH
         }
 
+@app.get("/debug/py")
+async def debug_py():
+    """Debug endpoint to check Python and ONNX Runtime installation"""
+    try:
+        import onnxruntime as ort
+        import pkgutil
+        import sys
+        
+        return {
+            "python": sys.version,
+            "onnxruntime": getattr(ort, "__version__", None),
+            "installed": any(m.name == "onnxruntime" for m in pkgutil.iter_modules()),
+            "available_providers": ort.get_available_providers() if ort else None
+        }
+    except Exception as e:
+        return {
+            "python": sys.version,
+            "onnxruntime": None, 
+            "installed": False,
+            "error": str(e)
+        }
+
 @app.get("/test-gcp")
 async def test_gcp_credentials():
     """Test Google Cloud Vision API credentials"""
