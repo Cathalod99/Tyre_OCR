@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
@@ -10,6 +10,10 @@ import cv2
 import numpy as np
 from pathlib import Path
 import logging
+import hashlib
+import time
+import uuid
+from typing import Optional
 
 # Add the parent directory to the path so we can import our modules
 sys.path.append(str(Path(__file__).parent.parent))
@@ -28,12 +32,14 @@ logger = logging.getLogger(__name__)
 
 # Global variables for models
 yolov11 = None
+onnx_session = None
 MODEL_PATH = "models/Tyre_Detect.onnx"  # Fixed path for container
+MODEL_SHA256 = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize models on startup"""
-    global yolov11
+    global yolov11, onnx_session, MODEL_SHA256
     
     # Set up Google Cloud credentials from environment variable if available
     gcp_creds_base64 = os.getenv('GOOGLE_CLOUD_CREDENTIALS_BASE64')
@@ -72,20 +78,32 @@ async def lifespan(app: FastAPI):
                    model_path, model_path.exists(), 
                    model_path.stat().st_size if model_path.exists() else -1)
         
+        # Calculate and log model SHA256 for verification
+        if model_path.exists():
+            MODEL_SHA256 = hashlib.sha256(model_path.read_bytes()).hexdigest()
+            logger.info("YOLO ONNX sha256=%s", MODEL_SHA256)
+        
         # Test model loading with Railway-optimized settings
         logger.info("Testing ONNX Runtime with YOLO model...")
         sess_opts = ort.SessionOptions()
         sess_opts.intra_op_num_threads = 1
         sess_opts.inter_op_num_threads = 1
         sess_opts.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
-        test_session = ort.InferenceSession(MODEL_PATH, sess_options=sess_opts, providers=["CPUExecutionProvider"])
+        onnx_session = ort.InferenceSession(MODEL_PATH, sess_options=sess_opts, providers=["CPUExecutionProvider"])
         logger.info("ONNX Runtime test successful")
+        
+        # Log model metadata
+        try:
+            model_meta = onnx_session.get_modelmeta()
+            logger.info("Model opset version=%s", getattr(model_meta, 'version', 'unknown'))
+        except Exception as e:
+            logger.warning("Could not get model metadata: %s", e)
         
         # Preload test - warm-up inference to catch bad opsets early
         logger.info("Running warm-up inference...")
         import numpy as np
         dummy_input = np.random.rand(1, 3, 640, 640).astype(np.float32)
-        _ = test_session.run(None, {"images": dummy_input})
+        _ = onnx_session.run(None, {"images": dummy_input})
         logger.info("Warm-up inference successful")
         
         logger.info("Loading YOLO model...")
@@ -102,8 +120,14 @@ async def lifespan(app: FastAPI):
     
     yield
     
-    # Cleanup code here if needed
+    # Cleanup code - graceful shutdown
     logger.info("Shutting down application...")
+    if onnx_session:
+        try:
+            onnx_session.close()
+            logger.info("ONNX session closed gracefully")
+        except Exception as e:
+            logger.warning("Error closing ONNX session: %s", e)
 
 app = FastAPI(title="Tire OCR API", version="1.0.0", lifespan=lifespan)
 
@@ -137,7 +161,16 @@ def lookup_plant_info(plant_code: str) -> dict:
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
+    """Health check endpoint - lightweight, no model touch"""
+    return {
+        "status": "healthy", 
+        "message": "Tire OCR API is running",
+        "timestamp": time.time()
+    }
+
+@app.get("/ready")
+async def readiness_check():
+    """Readiness check endpoint - asserts model is loaded"""
     yolo_status = "available" if yolov11 else "fallback mode"
     
     # Check ONNX Runtime availability
@@ -152,12 +185,13 @@ async def health_check():
         onnx_providers = []
     
     return {
-        "status": "healthy", 
-        "message": "Tire OCR API is running",
+        "status": "ready" if yolov11 else "not_ready", 
+        "message": "Tire OCR API readiness check",
         "yolo_status": yolo_status,
         "onnx": onnx_available,
         "onnx_version": onnx_version,
         "onnx_providers": onnx_providers,
+        "model_sha256": MODEL_SHA256,
         "features": {
             "yolo_detection": yolov11 is not None,
             "ocr_processing": True,
@@ -225,17 +259,33 @@ async def test_gcp_credentials():
         return {"error": f"GCP test failed: {str(e)}"}
 
 @app.post("/analyze-tire")
-async def analyze_tire(image: UploadFile = File(...)):
+async def analyze_tire(request: Request, image: UploadFile = File(...)):
     """
     Analyze a tire image and extract information
     """
+    request_id = str(uuid.uuid4())[:8]
+    start_time = time.time()
+    
     try:
-        # Validate file type
-        if not image.content_type.startswith('image/'):
+        # Security checks
+        if not image.content_type or not image.content_type.startswith('image/'):
             raise HTTPException(status_code=400, detail="File must be an image")
         
-        # Read image data
+        # Check file extension
+        if image.filename:
+            ext = Path(image.filename).suffix.lower()
+            if ext not in ['.jpg', '.jpeg', '.png', '.bmp', '.tiff']:
+                raise HTTPException(status_code=400, detail="Unsupported image format")
+        
+        # Size limit check (8MB)
         image_data = await image.read()
+        if len(image_data) > 8 * 1024 * 1024:  # 8MB
+            raise HTTPException(status_code=400, detail="Image too large (max 8MB)")
+        
+        logger.info("request_id=%s filename=%s size_bytes=%d content_type=%s", 
+                   request_id, image.filename, len(image_data), image.content_type)
+        
+        # Decode image data
         nparr = np.frombuffer(image_data, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
         
@@ -378,13 +428,20 @@ async def analyze_tire(image: UploadFile = File(...)):
                 cleaned_result['Scan TIN']['Plant Name'] = plant_info.get('Factory', 'N/A')
                 cleaned_result['Scan TIN']['Plant Country'] = plant_info.get('Country', 'N/A')
             
-            logger.info("Analysis completed successfully")
+            # Log successful completion with latency
+            latency_ms = int((time.time() - start_time) * 1000)
+            logger.info("request_id=%s status=success latency_ms=%d yolo_used=%s", 
+                       request_id, latency_ms, yolov11 is not None)
             return cleaned_result
             
     except HTTPException:
+        latency_ms = int((time.time() - start_time) * 1000)
+        logger.warning("request_id=%s status=client_error latency_ms=%d", request_id, latency_ms)
         raise
     except Exception as e:
-        logger.error(f"Error processing image: {str(e)}")
+        latency_ms = int((time.time() - start_time) * 1000)
+        logger.error("request_id=%s status=server_error latency_ms=%d error=%s", 
+                    request_id, latency_ms, str(e))
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 if __name__ == "__main__":

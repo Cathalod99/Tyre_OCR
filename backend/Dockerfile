@@ -19,5 +19,5 @@ COPY . .
 # Test ONNX Runtime installation
 RUN python -c "import onnxruntime; print('ONNX Runtime version:', onnxruntime.__version__)"
 
-# Start: bind to Railway's $PORT
-CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Start: bind to Railway's $PORT with production settings
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --timeout-keep-alive 15"]
