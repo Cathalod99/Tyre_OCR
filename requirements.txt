@@ -1,4 +1,4 @@
-# Core dependencies
+# Core dependencies for main_ml.py
 opencv-python>=4.5.0
 numpy>=1.21.0
 Pillow>=8.3.0
@@ -14,13 +14,3 @@ onnxruntime>=1.12.0
 
 # Google Cloud Vision API for OCR
 google-cloud-vision>=3.0.0
-
-# Optional: OpenAI (if you want to keep the hybrid approach)
-openai>=1.0.0
-
-# Development and testing
-pytest>=6.0.0
-tqdm>=4.60.0
-
-# Image processing
-imageio>=2.9.0
