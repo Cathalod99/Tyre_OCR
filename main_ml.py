@@ -113,13 +113,17 @@ for image_path in sorted(p for p in IMAGE_FOLDER.iterdir() if p.suffix.lower() i
                     result['Plant Information'] = plant_info
                     print(f"  🏭 Found plant: {plant_info['Factory']} ({plant_info['Country']})")
 
+        # Calculate image processing time
+        image_processing_time = time.time() - image_start_time
+        
         # Save results
         out_path = IMAGE_FOLDER / f"{image_path.stem}_ml.txt"
         with open(out_path, "w", encoding="utf-8") as f:
             f.write("=== ML-BASED TYRE OCR RESULTS ===\n")
             f.write(f"Image: {image_path.name}\n")
             f.write(f"Processing Method: Machine Learning Models\n")
-            f.write(f"Timestamp: {os.popen('date').read().strip()}\n\n")
+            f.write(f"Timestamp: {os.popen('date').read().strip()}\n")
+            f.write(f"Processing Time: {image_processing_time:.2f} seconds\n\n")
             
             f.write("Raw OCR Text:\n")
             f.write("-" * 30 + "\n")
@@ -172,8 +176,7 @@ for image_path in sorted(p for p in IMAGE_FOLDER.iterdir() if p.suffix.lower() i
         if "confidence" in result:
             print(f"     Confidence: {result['confidence']:.1%}")
     
-    # Calculate and display image processing time
-    image_processing_time = time.time() - image_start_time
+    # Display image processing time
     print(f"  ⏱️ Image processing time: {image_processing_time:.2f} seconds")
 
 # Calculate and display total script execution time
