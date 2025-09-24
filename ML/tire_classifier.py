@@ -36,7 +36,10 @@ BRANDS: List[str] = [
     "Semperit","Sentury","Sonix","Sportiva","Star Performer","Starmaxx","Sumitomo","Sunny","Sunwide",
     "Superia","Taurus","Tigar","Tomket","Torque","Tourador","Toyo","Tracmax","Trazano","Triangle",
     "Tristar","Uniroyal","Viking","Vittos","Voyager","Vredestein","Waterfall","Westlake","Windforce",
-    "Winrun","Yartu","Yokohama","Zeetex"
+    "Winrun","Yartu","Yokohama","Zeetex",
+    # Commercial/Truck tire brands
+    "Michelin Commercial","Bridgestone Commercial","Continental Commercial","Goodyear Commercial",
+    "Firestone Commercial","Pirelli Commercial","Dunlop Commercial","Cooper Commercial"
 ]
 
 # Common printed variants → canonical names
@@ -76,7 +79,13 @@ FALLBACK_MODELS: Dict[str, List[str]] = {
     "GOODYEAR":    ["EFFICIENTGRIP", "EAGLE", "VECTOR", "ULTRAGRIP"],
     "CONTINENTAL": ["PREMIUMCONTACT", "SPORTCONTACT", "ECOCONTACT", "VANCONTACT", "ALLSEASONCONTACT"],
     "PIRELLI":     ["CINTURATO", "P ZERO", "SCORPION", "WINTER"],
-    "DUNLOP":      ["SPORT", "SP SPORT", "WINTER", "STREETRESPONSE"]
+    "DUNLOP":      ["SPORT", "SP SPORT", "WINTER", "STREETRESPONSE"],
+    # Commercial/Truck tire models
+    "MICHELIN COMMERCIAL": ["XDE", "XDE2", "XDE3", "XZE", "XZE2", "XZE3", "XDA", "XDA2", "XDA3"],
+    "BRIDGESTONE COMMERCIAL": ["R250", "R268", "R284", "M729", "M729F", "M729A", "R192", "R192F"],
+    "GOODYEAR COMMERCIAL": ["G286", "G288", "G292", "G394", "G395", "G397", "G622", "G622R"],
+    "CONTINENTAL COMMERCIAL": ["HDL2", "HDL3", "HDL4", "HDL5", "HDL6", "HDL7", "HDL8", "HDL9"],
+    "FIRESTONE COMMERCIAL": ["FS560", "FS561", "FS562", "FS563", "FS564", "FS565", "FS566", "FS567"]
 }
 
 # ------------------------------
