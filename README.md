@@ -1,259 +1,187 @@
-# Tyre OCR with Machine Learning
+# Tire Damage Detection Pipeline
 
-A comprehensive tire information extraction system that combines computer vision, machine learning, and OCR to automatically extract tire specifications from images.
+A high-performance tire damage detection system using EfficientNet-B0 with 96.07% accuracy.
 
-## 🚀 Features
+## 🎯 Performance
 
-- **YOLO-based tire detection** using ONNX runtime
-- **Google Cloud Vision OCR** for text extraction
-- **Machine Learning models** for information parsing:
-  - Tire manufacturer and model classification
-  - Tire size and load/speed rating extraction
-  - DOT code and manufacturing date parsing
-- **Polar image transformation** for better OCR accuracy
-- **Offline ML processing** (no API costs for information extraction)
-- **Comprehensive error handling** and validation
+- **Overall Accuracy**: 96.07%
+- **Model Architecture**: EfficientNet-B0 (4.7M parameters)
+- **Dataset**: 1,856 tire images (good/bad classification)
+- **Training Time**: ~50 epochs with early stopping
 
-## 🏗️ Architecture
+### Per-Class Performance
+- **Good Tires**: 93.85% precision, 97.60% recall
+- **Bad Tires**: 98.00% precision, 94.84% recall
 
-The system consists of several specialized components:
+## 📁 Repository Structure
 
-### 1. **Tire Detection** (`Yolo/`)
-- Uses YOLOv11 ONNX model for tire detection
-- Extracts bounding boxes for OCR processing
-- Configurable confidence and IoU thresholds
-
-### 2. **OCR Processing** (`OCR/`)
-- Google Cloud Vision API for text extraction
-- Handles various image formats and qualities
-- Robust error handling for OCR failures
-
-### 3. **Image Enhancement** (`convert.py`)
-- Polar transformation to unwrap tire sidewalls
-- Square image conversion for better processing
-- Image concatenation for improved OCR accuracy
-
-### 4. **Machine Learning Models** (`ML/`)
-- **TireClassifier**: TF-IDF + fuzzy matching for manufacturer/model detection
-- **SizeExtractor**: Regex patterns + validation for tire dimensions
-- **DOTExtractor**: Advanced parsing for DOT codes and manufacturing dates
-- **TextProcessor**: Orchestrates all ML models with unified interface
-
-## 📦 Installation
-
-1. **Clone the repository**:
-```bash
-git clone <repository-url>
-cd Tyre_OCR
+```
+Damage/
+├── advanced_model.py          # EfficientNet model architecture
+├── damage_inference.py        # Main inference pipeline
+├── evaluate_model.py          # Model evaluation script
+├── train_advanced.py          # Training script
+├── split_manager.py           # Dataset management
+├── requirements.txt           # Dependencies
+├── models/                    # Trained models
+│   ├── best_model.pth        # 96% accuracy model (57MB)
+│   └── checkpoint.pth        # Training checkpoint
+├── data/                      # Dataset (gitignored)
+│   ├── train/                # Training images
+│   ├── val/                  # Validation images
+│   └── test/                 # Test images
+├── evaluation_results.json    # Performance metrics
+├── evaluation_plots.png       # Performance visualizations
+└── splits.json               # Dataset splits configuration
 ```
 
-2. **Install dependencies**:
+## 🚀 Quick Start
+
+### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Set up Google Cloud Vision API**:
+### 2. Run Inference
 ```bash
-# Set your Google Cloud credentials
-export GOOGLE_APPLICATION_CREDENTIALS="path/to/your/credentials.json"
+# Single image
+python damage_inference.py --model models/best_model.pth --image path/to/image.jpg --visualize
+
+# Directory of images
+python damage_inference.py --model models/best_model.pth --directory path/to/images/ --output results/
 ```
 
-4. **Set up OpenAI API** (optional, for hybrid approach):
+### 3. Evaluate Model
 ```bash
-export OPENAI_API_KEY="your-openai-api-key"
+python evaluate_model.py --model models/best_model.pth
 ```
 
-## 🚀 Usage
-
-### **Quick Start**
+### 4. Train New Model
 ```bash
-# Run the main system
-python main.py
-
-# Test the ML models
-python test_ml.py
+python train_advanced.py --model efficientnet_b0 --epochs 50 --batch_size 32
 ```
 
-### **Programmatic Usage**
+## 🔧 Key Features
+
+### Advanced Model Architecture
+- **EfficientNet-B0 backbone** with ImageNet pretrained weights
+- **Custom classifier head** with dropout and batch normalization
+- **Transfer learning** for optimal performance
+- **Automatic architecture detection** from saved models
+
+### Training Features
+- **Multiple architectures**: EfficientNet-B0, ResNet50, DenseNet121
+- **Advanced augmentations**: Random crops, flips, color jitter
+- **Learning rate scheduling**: ReduceLROnPlateau, CosineAnnealing
+- **Early stopping** with patience
+- **Class weight balancing** for imbalanced datasets
+- **Experiment tracking** with configs and results
+
+### Inference Features
+- **Batch processing** for multiple images
+- **Confidence thresholds** for predictions
+- **Visualization** with prediction overlays
+- **Multiple output formats** (JSON, CSV, images)
+
+## 📊 Dataset
+
+The pipeline uses the Kaggle Tire Quality Classification dataset:
+- **Total Images**: 1,856
+- **Classes**: Good (828) vs Bad (1,028) tires
+- **Splits**: 70% train, 15% validation, 15% test
+- **Format**: JPEG images, 224x224 resolution
+- **Augmentation**: Random crops, flips, color adjustments
+
+## 🛠️ Model Training
+
+### Training Configuration
 ```python
-from ML.text_processor import TextProcessor
-
-# Initialize the processor
-processor = TextProcessor()
-
-# Process OCR text
-ocr_text = "MICHELIN PILOT SPORT 4 225/55R16 102V DOT 6Y87 KY7L 4220"
-result = processor.process_ocr_text(ocr_text)
-
-print(result)
-# Output:
-# {
-#   "Manufacturer": "Michelin",
-#   "Tire model": "Pilot Sport 4",
-#   "Tire size": "225/55R16",
-#   "Load index and speed rating": "102/V",
-#   "Scan TIN": {
-#     "DOT Code": "6Y87 KY7L",
-#     "Week Code": "42",
-#     "Year Code": "20"
-#   }
-# }
+{
+    "optimizer": "adamw",
+    "learning_rate": 0.0001,
+    "weight_decay": 0.0001,
+    "scheduler": "reduce_on_plateau",
+    "epochs": 50,
+    "early_stop_patience": 10,
+    "use_class_weights": true
+}
 ```
 
-## 📊 Performance
+### Supported Architectures
+- **EfficientNet-B0**: Best performance (96.07% accuracy)
+- **ResNet50**: Alternative architecture
+- **DenseNet121**: Dense connectivity variant
 
-| Metric | Value |
-|--------|-------|
-| **Processing Speed** | 0.5-2 seconds per image |
-| **OCR Accuracy** | 90-95% (Google Cloud Vision) |
-| **ML Accuracy** | 85-90% (manufacturer detection) |
-| **Offline Operation** | ✅ (ML models only) |
-| **API Costs** | $0.0015 per image (OCR only) |
+## 📈 Evaluation Results
 
-## 🔧 Configuration
+The model achieves excellent performance across all metrics:
 
-### **Model Parameters**
+```
+Overall Accuracy: 96.07%
+
+Per-Class Performance:
+Good:  Precision=0.9385, Recall=0.9760, F1=0.9569
+Bad:    Precision=0.9800, Recall=0.9484, F1=0.9639
+
+Confusion Matrix:
+           Pred Good    Pred Bad    
+True Good  122          3           
+True Bad   8            147         
+```
+
+## 🔍 Usage Examples
+
+### Basic Inference
 ```python
-# YOLO Detection
-conf_threshold = 0.2  # Detection confidence
-iou_threshold = 0.3   # Non-maximum suppression
+from damage_inference import DamageDetector
 
-# Tire Classifier
-similarity_threshold = 0.3  # Manufacturer matching
-fuzzy_threshold = 0.6       # Fuzzy matching
+# Load model
+detector = DamageDetector('models/best_model.pth')
 
-# Size Extractor
-valid_widths = range(135, 345)      # Tire widths (mm)
-valid_aspect_ratios = [30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90]
-valid_rim_sizes = range(13, 25)     # Rim sizes (inches)
+# Predict single image
+result = detector.predict('path/to/tire_image.jpg')
+print(f"Prediction: {result['prediction']}")
+print(f"Confidence: {result['confidence']:.3f}")
 ```
 
-### **Environment Variables**
+### Batch Processing
 ```bash
-# Required
-export GOOGLE_APPLICATION_CREDENTIALS="path/to/credentials.json"
-
-# Optional
-export OPENAI_API_KEY="your-api-key"
+python damage_inference.py \
+    --model models/best_model.pth \
+    --directory test_images/ \
+    --output results/ \
+    --confidence 0.8 \
+    --visualize
 ```
 
-## 🧪 Testing
-
-Run the comprehensive test suite:
+### Custom Training
 ```bash
-python test_ml.py
+python train_advanced.py \
+    --model efficientnet_b0 \
+    --epochs 100 \
+    --batch_size 64 \
+    --lr 0.0005 \
+    --experiment my_experiment \
+    --class_weights
 ```
 
-This will test:
-- ✅ Individual ML model performance
-- ✅ Integrated system functionality
-- ✅ Error handling and edge cases
-- ✅ Model initialization and validation
+## 🎯 Production Ready
 
-## 📁 Project Structure
-
-```
-Tyre_OCR/
-├── main.py                 # Main processing pipeline
-├── convert.py              # Image transformation utilities
-├── requirements.txt        # Python dependencies
-├── test_ml.py             # Test suite
-├── models/
-│   └── Tyre_Detect.onnx   # YOLO detection model
-├── ML/                    # Machine Learning modules
-│   ├── text_processor.py  # Main orchestrator
-│   ├── tire_classifier.py # Manufacturer/model detection
-│   ├── size_extractor.py  # Tire size extraction
-│   └── dot_extractor.py   # DOT code parsing
-├── OCR/                   # OCR processing
-│   └── vision.py          # Google Cloud Vision integration
-├── Yolo/                  # YOLO detection
-│   ├── YOLO.py           # YOLO implementation
-│   └── utils.py          # Detection utilities
-├── sample_image/          # Test images and results
-└── doc/img/              # Processed images
-```
-
-## 🔍 Supported Tire Information
-
-### **Manufacturers** (100+ brands)
-Michelin, Bridgestone, Continental, Goodyear, Pirelli, Dunlop, Hankook, Yokohama, Toyo, Kumho, and many more.
-
-### **Tire Specifications**
-- **Size**: 205/55R16, 225/65R17, etc.
-- **Load Index**: 60-130 (corresponding to 250-1300 kg)
-- **Speed Rating**: L, M, N, P, Q, R, S, T, U, H, V, W, Y, Z
-- **DOT Code**: Plant code, serial number, week/year
-
-### **Model Recognition**
-Recognizes common tire models like Pilot Sport, Turanza, Eagle, P Zero, etc.
-
-## 🛠️ Troubleshooting
-
-### **Common Issues**
-
-1. **Import Errors**:
-```bash
-pip install -r requirements.txt
-```
-
-2. **Google Cloud Credentials**:
-```bash
-# Check if credentials are set
-echo $GOOGLE_APPLICATION_CREDENTIALS
-
-# Set credentials
-export GOOGLE_APPLICATION_CREDENTIALS="path/to/credentials.json"
-```
-
-3. **Model Loading Issues**:
-```bash
-# Check if model file exists
-ls models/Tyre_Detect.onnx
-
-# Models are created automatically on first run
-```
-
-4. **OCR Failures**:
-- Ensure image quality is good
-- Check Google Cloud Vision API quota
-- Verify credentials are valid
-
-### **Performance Optimization**
-
-1. **Batch Processing**:
-```python
-# Process multiple images efficiently
-processor = TextProcessor()
-for image_path in image_paths:
-    result = processor.process_ocr_text(ocr_text)
-```
-
-2. **Model Caching**:
-Models are automatically cached after first initialization for faster subsequent runs.
+This pipeline is production-ready with:
+- ✅ **High accuracy** (96.07%)
+- ✅ **Fast inference** (< 1 second per image)
+- ✅ **Robust error handling**
+- ✅ **Comprehensive logging**
+- ✅ **Model versioning**
+- ✅ **Experiment tracking**
+- ✅ **Clean, maintainable code**
 
 ## 📝 License
 
-This project is open source. The ML models are based on industry standards and public data.
-
-## 🤝 Contributing
-
-Contributions are welcome! Areas for improvement:
-- Additional tire brand recognition
-- Better OCR error correction
-- More size format support
-- Performance optimization
-- Additional test cases
-
-## 📚 References
-
-- [Google Cloud Vision API](https://cloud.google.com/vision)
-- [YOLO Object Detection](https://github.com/ultralytics/yolov5)
-- [ONNX Runtime](https://onnxruntime.ai/)
-- [Scikit-learn](https://scikit-learn.org/)
+This project is part of a Masters thesis research project.
 
 ---
 
-**Note**: This system requires Google Cloud Vision API for OCR functionality. The ML models work offline and don't require internet connectivity for information extraction.
-# Deployment trigger Thu Sep 18 13:30:08 WEST 2025
-# Trigger deployment Thu Sep 18 14:20:20 WEST 2025
+**Last Updated**: October 2024  
+**Model Version**: EfficientNet-B0 v1.0  
+**Accuracy**: 96.07%
