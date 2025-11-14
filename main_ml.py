@@ -89,15 +89,31 @@ for image_path in sorted(p for p in IMAGE_FOLDER.iterdir() if p.suffix.lower() i
         # Enhance & OCR
         print("  🔄 Enhancing tire image for better OCR...")
         warpPolar(str(crop_path))
-        enhanced = DOC_IMG_DIR / f"{image_path.stem}_tyre_convert.jpg"
+        enhanced_convert = DOC_IMG_DIR / f"{image_path.stem}_tyre_convert.jpg"
+        enhanced_square = DOC_IMG_DIR / f"{image_path.stem}_tyre_tyre_square.jpg"
         
-        # OCR text extraction
-        ocr_text = detect_text(str(enhanced))
-        if not ocr_text:
-            print("  ⚠️ No characters detected.")
+        # OCR text extraction from both images
+        print("  📝 Running OCR on converted image...")
+        ocr_text_convert = detect_text(str(enhanced_convert))
+        
+        print("  📝 Running OCR on square image...")
+        ocr_text_square = detect_text(str(enhanced_square))
+        
+        # Combine OCR results from both images
+        ocr_texts = []
+        if ocr_text_convert:
+            ocr_texts.append(ocr_text_convert)
+        if ocr_text_square:
+            ocr_texts.append(ocr_text_square)
+        
+        if not ocr_texts:
+            print("  ⚠️ No characters detected from either image.")
             continue
+        
+        # Combine the OCR results (join with newline separator)
+        ocr_text = "\n---\n".join(ocr_texts)
 
-        print("  🤖 Processing with ML models...")
+        print("   Processing with ML models...")
         # ML models → dict
         result = build_result(ocr_text)
         if not isinstance(result, dict):
@@ -121,10 +137,23 @@ for image_path in sorted(p for p in IMAGE_FOLDER.iterdir() if p.suffix.lower() i
             f.write(f"Processing Method: Machine Learning Models\n")
             f.write(f"Timestamp: {os.popen('date').read().strip()}\n\n")
             
-            f.write("Raw OCR Text:\n")
+            f.write("Raw OCR Text (from both converted and square images):\n")
             f.write("-" * 30 + "\n")
             f.write(ocr_text if isinstance(ocr_text, str) else str(ocr_text))
             f.write("\n\n")
+            
+            # Add info about which images were used
+            f.write("OCR Sources:\n")
+            f.write("-" * 30 + "\n")
+            if ocr_text_convert:
+                f.write(f"✓ Converted image ({enhanced_convert.name}): {len(ocr_text_convert)} characters\n")
+            else:
+                f.write(f"✗ Converted image ({enhanced_convert.name}): No text detected\n")
+            if ocr_text_square:
+                f.write(f"✓ Square image ({enhanced_square.name}): {len(ocr_text_square)} characters\n")
+            else:
+                f.write(f"✗ Square image ({enhanced_square.name}): No text detected\n")
+            f.write("\n")
             
             f.write("Extracted Tire Information:\n")
             f.write("-" * 30 + "\n")

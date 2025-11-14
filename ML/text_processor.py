@@ -12,7 +12,7 @@ from .dot_extractor import parse_tin
 def _normalize_size(s: str) -> str:
     if not s:
         return ""
-    m = re.match(r"^\s*(\d{3})\s*/\s*(\d{2})\s*[Zz]?[Rr]\s*(\d{2})\s*$", s)
+    m = re.match(r"^\s*(\d{3})\s*/\s*(\d{2})\s*[Zz]?[Rr]\s*(\d{2}(?:\.\d)?)\s*$", s)
     return f"{m.group(1)}/{m.group(2)}R{m.group(3)}" if m else s.replace(" ", "").upper()
 
 def _normalize_li_speed(s: str) -> str:
@@ -35,7 +35,9 @@ def build_result(ocr_text: str) -> Dict[str, Any]:
     parts = tin["parts"]
     date = parts.get("Date", "")
     wk = parts.get("Week", "")
-    yr = parts.get("Year", "")
+    yr_raw = parts.get("Year", "")
+    yr_resolved = parts.get("YearResolved", "")
+    year_code = date if date else (yr_raw or yr_resolved)
 
     out = {
         "Manufacturer": manufacturer,
@@ -46,11 +48,12 @@ def build_result(ocr_text: str) -> Dict[str, Any]:
             "Full DOT": full_dot,
             "DOT Code": date,
             "Week Code": wk,
-            "Year Code": yr,
+            "Year Code": year_code,
             "Plant Code": parts.get("Plant", ""),
             "Plant Name": parts.get("PlantName", ""),
             "Plant Country": parts.get("PlantCountry", ""),
-            "Plant Manufacturer": parts.get("PlantManufacturer", "")
+            "Plant Manufacturer": parts.get("PlantManufacturer", ""),
+            "Resolved Year": yr_resolved
         }
     }
     return out

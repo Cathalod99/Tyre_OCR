@@ -24,6 +24,7 @@ PLANT_MAX_LEN = 3                     # plant: 2–3 alnum
 PLANT_MIN_LEN = 2
 SERIAL_MAX_LEN = 10                   # middle block max length
 FUTURE_YEAR_SOFT_TOLERANCE = 5        # YY > now+5 gets small penalty
+MIN_FULL_YEAR = 2018                  # Discard dates that resolve before this year
 
 _UNIT_NOISE = {"LB", "LBS", "KG", "KGS", "KPA", "PSI", "BAR"}
 _CONTEXT_NOISE = {"MAX", "LOAD", "INFLATION", "PRESSURE", "WEIGHT"}
@@ -151,6 +152,27 @@ def _year_penalty(yy: int) -> float:
     """Soft tie-break penalty for far-future YY; old years are allowed."""
     now_yy = int(datetime.now().strftime("%y"))
     return 0.5 if yy > now_yy + FUTURE_YEAR_SOFT_TOLERANCE else 0.0
+
+def _resolve_full_year(yy: int) -> int:
+    """
+    Convert 2-digit YY to a 4-digit year by anchoring to current century,
+    rolling back a century if it lands too far in the future.
+    """
+    now = datetime.now()
+    century = (now.year // 100) * 100
+    candidate = century + yy
+    if candidate > now.year + FUTURE_YEAR_SOFT_TOLERANCE:
+        candidate -= 100
+    if candidate > now.year:
+        candidate = now.year
+    return candidate
+
+def _year_plausible(yy: int) -> bool:
+    """
+    Reject extremely old resolved years (pre MIN_FULL_YEAR).
+    """
+    resolved = _resolve_full_year(yy)
+    return MIN_FULL_YEAR <= resolved <= datetime.now().year
 
 # ---------- line-aware tokenization ----------
 
@@ -411,6 +433,24 @@ def _find_plant_after_dot_lines(L: LineTokens) -> Tuple[str, int]:
                         return combo, gi
     return "", -1
 
+
+def _find_plant_near_token(L: LineTokens, token_idx: int, window: int = 5) -> Tuple[str, int]:
+    """
+    Fallback: scan tokens immediately before the WWYY candidate for a plant code.
+    Looks at both clean and digit-repaired variants.
+    """
+    start = max(0, token_idx - window)
+    for idx in range(token_idx - 1, start - 1, -1):
+        clean_tok = (L.flat_clean[idx] or "").upper()
+        digit_tok = (L.flat_digits[idx] or "").upper()
+        for cand in (clean_tok, digit_tok):
+            if not cand or cand in _NOISE or cand == "DOT":
+                continue
+            if PLANT_MIN_LEN <= len(cand) <= PLANT_MAX_LEN and cand.isalnum():
+                if _lookup_plant(cand):
+                    return cand, idx
+    return "", -1
+
 def _concat_middle(tokens_clean: List[str], start_idx: int, end_idx: int) -> str:
     mids: List[str] = []
     for k in range(start_idx, end_idx):
@@ -470,16 +510,31 @@ def parse_tin(text: str) -> Dict[str, object]:
     if not candidates:
         return out
 
-    best = candidates[0]
+    best: Optional[DateCandidate] = None
+    for cand in candidates:
+        if cand.week is None or cand.year is None:
+            continue
+        if _year_plausible(cand.year):
+            best = cand
+            break
+    if not best:
+        return out
     wwyy = best.wwyy
     week = wwyy[:2]
     year = wwyy[2:]
+    full_year = _resolve_full_year(int(year))
+    year_str = f"{full_year % 100:02d}"
     # chosen from dot line?
     li, _ = L.map_global_to_line[best.token_idx]
     out["_debug"]["chosen_from_dot_line"] = (li in L.dot_lines)
 
     # Optional plant
     plant, plant_gidx = _find_plant_after_dot_lines(L)
+    plant_source = "dot_line" if plant else ""
+    if not plant:
+        plant, plant_gidx = _find_plant_near_token(L, best.token_idx)
+        if plant:
+            plant_source = "fallback_near_date"
 
     # Serial/middle: tokens before date (global indices)
     before_clean = L.flat_clean[:best.token_idx]
@@ -511,6 +566,10 @@ def parse_tin(text: str) -> Dict[str, object]:
         "Serial": serial,
         "Date": wwyy,
         "Week": week,
-        "Year": year
+        "Year": year_str,
+        "YearResolved": str(full_year)
     })
+    if plant_source:
+        out["_debug"]["plant_source"] = plant_source
+    out["_debug"]["resolved_year"] = full_year
     return out

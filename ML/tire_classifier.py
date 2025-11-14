@@ -25,7 +25,7 @@ BRANDS: List[str] = [
     "APlus","AUSTONE","Alliance","Altenzo","Antares","Apollo","Arivo","Atlas","Autogreen","Avon",
     "BF Goodrich","Barum","Bridgestone","CST","Ceat","Challenger","Chengshan","Continental","Cooper",
     "Davanti","Dayton","Debica","Delinte","Diamondback","Diplomat","Double Star","Dunlop","Duraturn",
-    "Dynamo","Event","Evergreen","Falken","Firemax","Firestone","Fortuna","Fortune","Fronway","Fulda",
+    "Dynamo","Event","Evergreen","Falken","Farroad","Firemax","Firestone","Fortuna","Fortune","Fronway","Fulda",
     "GT Radial","Gislaved","Goodride","Goodyear","Greentrac","Grenlander","Habilead","Haida","Hankook",
     "Ilink","Infinity","Insa Turbo","Invovic","Iris","Kelly","Kenda","Kingboss","Kingstar","Kleber",
     "Kontio","Kormoran","Kpatos","Kumho","Landsail","Lanvigator","Lappi","Lassa","Laufenn","Leao",
@@ -37,7 +37,6 @@ BRANDS: List[str] = [
     "Superia","Taurus","Tigar","Tomket","Torque","Tourador","Toyo","Tracmax","Trazano","Triangle",
     "Tristar","Uniroyal","Viking","Vittos","Voyager","Vredestein","Waterfall","Westlake","Windforce",
     "Winrun","Yartu","Yokohama","Zeetex",
-    # Commercial/Truck tire brands
     "Michelin Commercial","Bridgestone Commercial","Continental Commercial","Goodyear Commercial",
     "Firestone Commercial","Pirelli Commercial","Dunlop Commercial","Cooper Commercial"
 ]
@@ -80,6 +79,7 @@ FALLBACK_MODELS: Dict[str, List[str]] = {
     "CONTINENTAL": ["PREMIUMCONTACT", "SPORTCONTACT", "ECOCONTACT", "VANCONTACT", "ALLSEASONCONTACT"],
     "PIRELLI":     ["CINTURATO", "P ZERO", "SCORPION", "WINTER"],
     "DUNLOP":      ["SPORT", "SP SPORT", "WINTER", "STREETRESPONSE"],
+    "FARROAD":     ["FRD 66", "FRD66", "FRD-66"],
     # Commercial/Truck tire models
     "MICHELIN COMMERCIAL": ["XDE", "XDE2", "XDE3", "XZE", "XZE2", "XZE3", "XDA", "XDA2", "XDA3"],
     "BRIDGESTONE COMMERCIAL": ["R250", "R268", "R284", "M729", "M729F", "M729A", "R192", "R192F"],
@@ -188,6 +188,25 @@ def _tokens_model_like(text: str) -> List[str]:
     toks = [t for t in toks if t not in MODEL_STOPWORDS]
     return toks
 
+def _plausible_model_token(token: str) -> bool:
+    """
+    Heuristic gate to avoid serial numbers / batch codes:
+      - must contain at least one alpha char (already true)
+      - if length > 5, require at least 2 alpha chars
+      - deny tokens that are overwhelmingly numeric
+    """
+    letters = sum(ch.isalpha() for ch in token)
+    digits = sum(ch.isdigit() for ch in token)
+    if letters == 0:
+        return False
+    if len(token) > 5 and letters < 2:
+        return False
+    if digits >= len(token) - 1:
+        # allow short forms like "R250" (len 4), but block long serials
+        if not (len(token) <= 4 and letters >= 1):
+            return False
+    return True
+
 def _brand_line_indices(text: str, manufacturer: str) -> List[int]:
     if not manufacturer:
         return []
@@ -272,6 +291,9 @@ def detect_model(text: str, manufacturer: str) -> str:
 
     # Remove the brand token itself (any case)
     region_tokens = [t for t in region_tokens if _norm(t) != _norm(brand_up)]
+    if not region_tokens:
+        return ""
+    region_tokens = [t for t in region_tokens if _plausible_model_token(t)]
     if not region_tokens:
         return ""
 

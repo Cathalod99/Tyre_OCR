@@ -17,7 +17,7 @@ def warpPolar(path):
     cv2.imwrite(f"{path.split('.')[0]}_tyre_square.jpg", ring)
 
     outer_radius = size // 2
-    inner_radius_factor = 0.6  # 0.70 measured empirically from image
+    inner_radius_factor = 0.5  # 0.70 measured empirically from image
 
     # Unwarp ring
     warped = cv2.warpPolar(ring, (size, int(size * math.pi)), (outer_radius, outer_radius), outer_radius, 0)
